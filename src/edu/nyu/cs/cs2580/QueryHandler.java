@@ -53,13 +53,15 @@ class QueryHandler implements HttpHandler {
       if (uriPath.equals("/search")){
         Map<String,String> query_map = getQueryMap(uriQuery);
         Set<String> keys = query_map.keySet();
+        Vector <ScoredDocument> sds =new Vector<ScoredDocument>();
         if (keys.contains("query")){
           if (keys.contains("ranker")){
             String ranker_type = query_map.get("ranker");
             // @CS2580: Invoke different ranking functions inside your
             // implementation of the Ranker class.
-            if (ranker_type.equals("cosine")){
-              queryResponse = (ranker_type + " not implemented.");
+            /*if (ranker_type.equals("cosine")){
+              ///queryResponse = (ranker_type + " not implemented.");
+            	
             } else if (ranker_type.equals("QL")){
               queryResponse = (ranker_type + " not implemented.");
             } else if (ranker_type.equals("phrase")){
@@ -68,11 +70,16 @@ class QueryHandler implements HttpHandler {
               queryResponse = (ranker_type + " not implemented.");
             } else {
               queryResponse = (ranker_type+" not implemented.");
+            }*/
+             sds= _ranker.runBySignal(ranker_type,query_map.get("query"));
+          } 
+            else{
+            	 sds = _ranker.runquery(query_map.get("query"));
             }
-          } else {
+            //else {
             // @CS2580: The following is instructor's simple ranker that does not
             // use the Ranker class.
-            Vector < ScoredDocument > sds = _ranker.runquery(query_map.get("query"));
+            //Vector < ScoredDocument > sds = _ranker.runquery(query_map.get("query"));
             Iterator < ScoredDocument > itr = sds.iterator();
             while (itr.hasNext()){
               ScoredDocument sd = itr.next();
@@ -84,7 +91,7 @@ class QueryHandler implements HttpHandler {
             if (queryResponse.length() > 0){
               queryResponse = queryResponse + "\n";
             }
-          }
+          //}
         }
       }
     }
