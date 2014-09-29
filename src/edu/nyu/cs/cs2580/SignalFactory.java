@@ -16,8 +16,13 @@ public class SignalFactory {
 			   return new phraseRunner(_index);
 		   }
 		   
-		   if (signal.equals("numviews")==true){
+		   if (signal.equals("linear")==true){
 			   return new numViewRunner(_index);
+		   }
+		   
+		   if (signal.equals ("QL")==true){
+			   //System.out.println("hi this is QL");
+			   return new qlRunner(_index);
 		   }
 		   
 	   }
@@ -28,6 +33,81 @@ public class SignalFactory {
 interface SignalRunner{
 	 public ScoredDocument runquery(String query, int did);
 }
+
+class qlRunner implements SignalRunner{
+	private final Index _index;
+	private static final double lamda=0.5;
+	
+	
+	private Map<String,Integer> makeUnigram(Vector<String> dv){
+		Map<String,Integer> unigramDic = new HashMap<String,Integer> ();
+		for (int i=0;i<dv.size();i++){
+			String word = dv.get(i);
+			if (unigramDic.containsKey(word)==false){
+				unigramDic.put(word,1);
+			}
+			else{
+				unigramDic.put(word,unigramDic.get(word)+1);
+			}
+		}
+		return unigramDic;
+	}
+	private double calculateProbability(String currentWord, Map<String,Integer> documentDic, int documentSize){
+		double score=0;
+		double sind=0;
+		//string in document
+		if (documentDic.containsKey(currentWord)==true){
+		 sind=(double)documentDic.get(currentWord);
+		}
+		//document size
+		double ds = (double)documentSize;
+		//probability within Document
+	
+		double pwd=sind/ds;
+		//probability within corpus 
+		double termF=(double)_index.termFrequency(currentWord);
+		double totalF = (double)_index.termFrequency();
+		double pwc=termF/totalF;
+		score = (1-lamda)*pwd+lamda*pwc;
+		return Math.log(score);
+	}
+	
+	@Override 
+	public ScoredDocument runquery(String query , int did){
+		
+		Document d= _index.getDoc(did);
+		Vector<String> word_vector=d.get_body_vector();
+		Map<String,Integer> documentDic=makeUnigram(word_vector);
+		int totalNum=0;
+		
+		
+		for (String key: documentDic.keySet()){
+			totalNum+=documentDic.get(key);
+		}
+		Scanner s = new Scanner(query);
+	    Vector < String > qv = new Vector < String > ();
+	    while (s.hasNext()){
+	      String term = s.next();
+	      qv.add(term);
+	    }
+	    //Calculate the total
+	    int documentSize = word_vector.size();
+	    //Currently it is written as log format
+	    double logScore=0.0;
+	    for (int i=0;i<qv.size();i++){
+	    	String currentWord=qv.get(i);
+	    	logScore+=calculateProbability(currentWord,documentDic,documentSize);
+	    }
+		
+		//System.out.println("log score is:"+logScore);
+		return new ScoredDocument(did, d.get_title_string(), logScore);
+	}
+	public qlRunner(Index _index){
+		this._index=_index;
+		
+	}
+}
+
 
 class numViewRunner implements SignalRunner{
 	private Index _index;
@@ -58,30 +138,40 @@ class phraseRunner implements SignalRunner{
 				phraseDic.put(phrase, phraseDic.get(phrase)+1);
 			}
 		}
-		String start="_START_";
-		String end="_END";
-		if (dv.size()>0){
-			phraseDic.put(start+dv.get(0), 1);
-			phraseDic.put(dv.get(dv.size()-1)+end, 1);
-		}
-		else{
-			phraseDic.put(start+end, 1);
-		}
 		return phraseDic;
 	}
-	
+	private Map<String,Integer> makeUnigram(Vector<String> dv){
+		Map<String,Integer> unigramDic = new HashMap<String,Integer> ();
+		for (int i=0;i<dv.size();i++){
+			String word = dv.get(i);
+			if (unigramDic.containsKey(word)==false){
+				unigramDic.put(word,1);
+			}
+			else{
+				unigramDic.put(word,unigramDic.get(word)+1);
+			}
+		}
+		return unigramDic;
+	}
 	@Override
 	public ScoredDocument runquery(String query,int did){
 		Document d = _index.getDoc(did);
 		Vector < String > dv =d.get_body_vector();
-		Map<String,Integer> dMap=makePhrase(dv);
+		Map<String,Integer> dMap;
+		Map<String,Integer> qMap;
 		Scanner s = new Scanner(query);
 	    Vector < String > qv = new Vector < String > ();
 	    while (s.hasNext()){
 	      String term = s.next();
 	      qv.add(term);
 	    }
-	    Map<String,Integer> qMap = makePhrase(qv);
+		if (qv.size() > 1) {
+			dMap = makePhrase(dv);
+			qMap = makePhrase(qv);
+		} else {
+			dMap = makeUnigram(dv);
+			qMap = makeUnigram(qv);
+		}
 		double score=0;
 		for(String key : qMap.keySet()){
 			if (dMap.containsKey(key)==true){
