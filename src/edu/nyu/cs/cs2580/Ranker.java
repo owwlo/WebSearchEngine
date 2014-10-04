@@ -3,7 +3,7 @@ package edu.nyu.cs.cs2580;
 import java.util.Vector;
 import java.util.Scanner;
 
-class Ranker {
+public class Ranker {
   private Index _index;
 
   public Ranker(String index_source){
