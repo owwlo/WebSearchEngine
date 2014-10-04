@@ -188,7 +188,26 @@ class Evaluator {
       	
       }
       // output the evaluation
-      
+      for (String key : results.keySet()){
+      	Metrics value = results.get(key);
+      	System.out.print(key + "\t" + value.precision1
+      			+ "\t" + value.precision5
+      			+ "\t" + value.precision10
+      			+ "\t" + value.recall1
+      			+ "\t" + value.recall5
+      			+ "\t" + value.recall10
+      			+ "\t" + value.f1
+      			+ "\t" + value.f5
+      			+ "\t" + value.f10);
+      	for (double p : value.prGraph){
+      		System.out.print("\t" + p);
+      	}
+      	System.out.print("\t" + value.avgPrecision
+      			+ "\t" + value.ndcg1
+      			+ "\t" + value.ndcg5
+      			+ "\t" + value.ndcg10
+      			+ "\t" + value.reciprocalRank);   	
+      }
       
     } catch (Exception e){
       System.err.println("Error:" + e.getMessage());
