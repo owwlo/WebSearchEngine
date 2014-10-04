@@ -187,6 +187,9 @@ class Evaluator {
       	}
       	
       }
+      // output the evaluation
+      
+      
     } catch (Exception e){
       System.err.println("Error:" + e.getMessage());
     }
