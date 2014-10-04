@@ -3,13 +3,13 @@ package edu.nyu.cs.cs2580;
 import java.util.Vector;
 import java.util.Scanner;
 
-class Ranker {
+public class Ranker {
   private Index _index;
 
   public Ranker(String index_source){
     _index = new Index(index_source);
   }
-
+  
   public Vector < ScoredDocument > runquery(String query){
     Vector < ScoredDocument > retrieval_results = new Vector < ScoredDocument > ();
     for (int i = 0; i < _index.numDocs(); ++i){
@@ -17,6 +17,16 @@ class Ranker {
     }
     return retrieval_results;
   }
+   
+	public Vector<ScoredDocument> runBySignal(String ranker_type,String query) {
+		Vector<ScoredDocument> retrieval_results = new Vector<ScoredDocument>();
+		SignalRunner signalrunner= SignalFactory.makeSignalRunner(ranker_type,_index);
+		for (int i = 0; i < _index.numDocs(); ++i) {
+			retrieval_results.add(signalrunner.runquery(query, i));
+		}
+		
+		return retrieval_results;
+	}
 
   public ScoredDocument runquery(String query, int did){
 
@@ -32,6 +42,8 @@ class Ranker {
     // details of how index works.
     Document d = _index.getDoc(did);
     Vector < String > dv = d.get_title_vector();
+   
+   
 
     // Score the document. Here we have provided a very simple ranking model,
     // where a document is scored 1.0 if it gets hit by at least one query term.
