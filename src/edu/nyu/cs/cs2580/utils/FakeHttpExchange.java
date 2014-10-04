@@ -26,42 +26,35 @@ public class FakeHttpExchange extends HttpExchange {
     
     @Override
     public void close() {
-        // TODO Auto-generated method stub
     }
 
     @Override
     public Object getAttribute(String arg0) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public HttpContext getHttpContext() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public InetSocketAddress getLocalAddress() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public HttpPrincipal getPrincipal() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getProtocol() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public InetSocketAddress getRemoteAddress() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -92,7 +85,6 @@ public class FakeHttpExchange extends HttpExchange {
 
     @Override
     public int getResponseCode() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
@@ -103,13 +95,11 @@ public class FakeHttpExchange extends HttpExchange {
 
     @Override
     public void sendResponseHeaders(int arg0, long arg1) throws IOException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void setAttribute(String arg0, Object arg1) {
-        // TODO Auto-generated method stub
 
     }
 

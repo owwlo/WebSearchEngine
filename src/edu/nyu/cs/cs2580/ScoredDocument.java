@@ -1,7 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 // @CS2580: this class should not be changed.
-class ScoredDocument {
+public class ScoredDocument {
   public int _did;
   public String _title;
   public double _score;
