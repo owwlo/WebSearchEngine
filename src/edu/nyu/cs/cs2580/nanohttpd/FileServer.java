@@ -11,10 +11,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import edu.nyu.cs.cs2580.QueryHandler;
@@ -104,20 +104,39 @@ public class FileServer extends NanoHTTPD {
             canServeUri = canServeUri(uri, homeDir);
         }
         if (!canServeUri) {
-            HttpExchange fhe = new FakeHttpExchange(URI.create("http://" + headers.get("host")
+            FakeHttpExchange fhe = new FakeHttpExchange(URI.create("http://" + headers.get("host")
                     + uri + "?" + session.getQueryParameterString()));
             for (String key : headers.keySet()) {
                 List<String> slst = new ArrayList<String>();
                 slst.add(headers.get(key));
                 fhe.getRequestHeaders().put(key, slst);
             }
+            
+            // Read cookies!
+            CookieHandler cookie = session.getCookies();
+            Iterator<String> itr = cookie.iterator();
+            while (itr.hasNext()) {
+                String key = itr.next();
+                fhe.setAttribute(key, cookie.read(key));
+            }
+            
             try {
                 handler.handle(fhe);
             } catch (IOException e) {
             }
+            
+            // Update cookies!
+            for (String key : fhe.getAttributes().keySet()) {
+                session.getCookies().set(key, fhe.getAttributes().get(key).toString(), 7);
+            }
+
+            String response_mime = fhe.getResponseHeaders().get("Content-Type").get(0)
+                    .equals("text/html") ? NanoHTTPD.MIME_HTML
+                    : NanoHTTPD.MIME_PLAINTEXT;
+
             return createResponse(
                     Response.Status.OK,
-                    NanoHTTPD.MIME_PLAINTEXT,
+                    response_mime,
                     new ByteArrayInputStream(((ByteArrayOutputStream) fhe.getResponseBody())
                             .toByteArray()));
         }

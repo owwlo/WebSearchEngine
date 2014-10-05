@@ -6,11 +6,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import com.sun.net.httpserver.Authenticator;
+import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpPrincipal;
+import com.sun.net.httpserver.HttpServer;
 
 public class FakeHttpExchange extends HttpExchange {
     private Headers responseHeaders = new Headers();
@@ -18,6 +25,7 @@ public class FakeHttpExchange extends HttpExchange {
     private String method = "GET";
     private URI uri = null;
     private OutputStream outputStream = new ByteArrayOutputStream();
+    private Map<String, Object> map = new HashMap<String, Object>();
 
     public FakeHttpExchange(URI uri) {
         super();
@@ -28,8 +36,15 @@ public class FakeHttpExchange extends HttpExchange {
     public void close() {
     }
 
+    public Map<String, Object> getAttributes() {
+        return map;
+    }
+    
     @Override
     public Object getAttribute(String arg0) {
+        if (map.containsKey(arg0)) {
+            return map.get(arg0);
+        }
         return null;
     }
 
@@ -100,7 +115,7 @@ public class FakeHttpExchange extends HttpExchange {
 
     @Override
     public void setAttribute(String arg0, Object arg1) {
-
+        map.put(arg0, arg1);
     }
 
     @Override
