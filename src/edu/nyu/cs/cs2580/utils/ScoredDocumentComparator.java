@@ -7,6 +7,14 @@ import edu.nyu.cs.cs2580.ScoredDocument;
 public class ScoredDocumentComparator implements Comparator<ScoredDocument> {
     @Override
     public int compare(ScoredDocument o1, ScoredDocument o2) {
-        return (o1._score > o2._score) ? -1 : 1;
+       // return (o1._score > o2._score) ? -1 : 1;
+    	if (o1._score<o2._score){
+    		return 1;
+    	}
+    	if (o1._score>o2._score){
+    		return -1;
+    	}
+    	return 0;
     }
+
 }
