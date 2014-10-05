@@ -24,7 +24,6 @@ public class Ranker {
 		for (int i = 0; i < _index.numDocs(); ++i) {
 			retrieval_results.add(signalrunner.runquery(query, i));
 		}
-		
 		return retrieval_results;
 	}
 

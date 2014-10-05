@@ -115,7 +115,7 @@ public class QueryHandler implements HttpHandler {
 
                     // Sort result of ScoredDocuments
                     Collections.sort(sds, new ScoredDocumentComparator());
-
+                    
                     // We support both HTML and TEXT.
                     // Default format is TEXT.
                     String outputFormat = "text";

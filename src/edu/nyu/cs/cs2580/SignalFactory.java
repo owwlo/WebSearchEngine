@@ -12,13 +12,16 @@ public class SignalFactory {
             return new CosineRunner(_index);
         }
         else {
+        	if (signal.equals("numview")==true){
+        		return new numViewRunner(_index);
+        	}
             if (signal.equals("phrase") == true) {
 
                 return new phraseRunner(_index);
             }
 
             if (signal.equals("linear") == true) {
-                return new numViewRunner(_index);
+                return new linearRunner(_index);
             }
 
             if (signal.equals("QL") == true) {
@@ -101,7 +104,7 @@ class qlRunner implements SignalRunner {
         }
 
         // System.out.println("log score is:"+logScore);
-        return new ScoredDocument(did, d.get_title_string(), logScore);
+        return new ScoredDocument(did, d.get_title_string(), Math.exp(logScore));
     }
 
     public qlRunner(Index _index) {
@@ -122,6 +125,21 @@ class numViewRunner implements SignalRunner {
         Document d = _index.getDoc(did);
         double score = 0;
         score = (double) d.get_numviews();
+        if (score>=10000){
+        	score=4;
+        }
+        else{
+        	if (score>=1000){
+        		score=3;
+        	}else{
+        		if (score>=100){
+        			score=2;
+        		}
+        		else{
+        			score=1;
+        		}
+        	}
+        }
         return new ScoredDocument(did, d.get_title_string(), score);
     }
 
@@ -190,7 +208,45 @@ class phraseRunner implements SignalRunner {
         this._index = _index;
     }
 }
-
+class linearRunner implements SignalRunner{
+	private static double beta1=1.0;
+	private static double beta2=10.0;
+	private static double beta3=0.05;
+	private static double beta4=0.05;
+	private Index _index;
+	private CosineRunner cosinerunner;
+	private phraseRunner phraserunner;
+	private numViewRunner numviewrunner;
+	private qlRunner qlrunner;
+	public linearRunner(Index _index) {
+	        this._index = _index;
+	        cosinerunner = new CosineRunner(_index);
+	        phraserunner = new phraseRunner(_index);
+	        numviewrunner = new numViewRunner(_index);
+	        qlrunner = new qlRunner(_index);
+	}
+	 @Override
+	 public ScoredDocument runquery(String query, int did) {
+		  Document d = _index.getDoc(did);
+          ScoredDocument co = cosinerunner.runquery(query, did);
+          ScoredDocument phrase = phraserunner.runquery(query, did);
+          ScoredDocument view = numviewrunner.runquery(query, did);
+          ScoredDocument ql = qlrunner.runquery(query, did);
+          double score=0;
+          if (d.get_title_string().equals("google")){
+        	 // System.out.println(co._score);
+        	 // System.out.println(phrase._score);
+        	 // System.out.println(view._score);
+        	 // System.out.println(Math.exp(ql._score));
+          }
+          score+=co._score*beta1;
+          score+=phrase._score*beta3;
+          score+=view._score*beta4;
+          score+=ql._score*beta2;
+          return new ScoredDocument(did, d.get_title_string(), score);
+	 }
+	
+}
 class CosineRunner implements SignalRunner {
     private Index _index;
     private int n;
@@ -263,7 +319,7 @@ class CosineRunner implements SignalRunner {
             double tfIdf = currentTf * currentIdf;
             score += tfIdf * tfIdf;
         }
-
+        
         return Math.sqrt(score);
     }
 
@@ -289,6 +345,7 @@ class CosineRunner implements SignalRunner {
         double score = 0;
         // Calculating the final score
         for (String key : tfDic.keySet()) {
+        	
             if (tfDicForD.containsKey(key) == true) {
                 double tfForQ = tfDic.get(key);
                 double tfForD = tfDicForD.get(key);
