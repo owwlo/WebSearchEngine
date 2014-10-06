@@ -182,7 +182,7 @@ class phraseRunner implements SignalRunner {
         double score = 0;
         for (String key : qMap.keySet()) {
             if (dMap.containsKey(key) == true) {
-                score = score + 1;
+                score = score + dMap.get(key);
             }
         }
         return new ScoredDocument(did, d.get_title_string(), score);
@@ -195,8 +195,8 @@ class phraseRunner implements SignalRunner {
 class linearRunner implements SignalRunner{
 	private static double beta1=1.0;
 	private static double beta2=10.0;
-	private static double beta3=0.05;
-	private static double beta4=0.05;
+	private static double beta3=0.001;
+	private static double beta4=0.01;
 	private Index _index;
 	private CosineRunner cosinerunner;
 	private phraseRunner phraserunner;
