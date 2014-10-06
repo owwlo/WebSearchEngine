@@ -10,6 +10,7 @@ var clickHandler = function(did) {
 			"ranker": ranker,
 			"action": "click"
 		});
+	bootbox.alert("You just clicked on document with did: " + did + ". Action has been recorded.");
 }
 
 $(function() {

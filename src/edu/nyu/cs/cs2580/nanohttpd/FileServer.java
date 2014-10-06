@@ -111,7 +111,7 @@ public class FileServer extends NanoHTTPD {
                 slst.add(headers.get(key));
                 fhe.getRequestHeaders().put(key, slst);
             }
-            
+
             // Read cookies!
             CookieHandler cookie = session.getCookies();
             Iterator<String> itr = cookie.iterator();
@@ -119,12 +119,12 @@ public class FileServer extends NanoHTTPD {
                 String key = itr.next();
                 fhe.setAttribute(key, cookie.read(key));
             }
-            
+
             try {
                 handler.handle(fhe);
             } catch (IOException e) {
             }
-            
+
             // Update cookies!
             for (String key : fhe.getAttributes().keySet()) {
                 session.getCookies().set(key, fhe.getAttributes().get(key).toString(), 7);

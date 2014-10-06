@@ -8,23 +8,23 @@ import java.util.Vector;
 
 public class SignalFactory {
     public static SignalRunner makeSignalRunner(String signal, Index _index) {
-        if (signal.equals("cosine") == true) {
+        if (signal.equalsIgnoreCase("cosine") == true) {
             return new CosineRunner(_index);
         }
         else {
-        	if (signal.equals("numview")==true){
+        	if (signal.equalsIgnoreCase("numviews")==true){
         		return new numViewRunner(_index);
         	}
-            if (signal.equals("phrase") == true) {
+            if (signal.equalsIgnoreCase("phrase") == true) {
 
                 return new phraseRunner(_index);
             }
 
-            if (signal.equals("linear") == true) {
+            if (signal.equalsIgnoreCase("linear") == true) {
                 return new linearRunner(_index);
             }
 
-            if (signal.equals("QL") == true) {
+            if (signal.equalsIgnoreCase("QL") == true) {
                 // System.out.println("hi this is QL");
                 return new qlRunner(_index);
             }
@@ -123,26 +123,10 @@ class numViewRunner implements SignalRunner {
     @Override
     public ScoredDocument runquery(String query, int did) {
         Document d = _index.getDoc(did);
-        double score = 0;
-        score = (double) d.get_numviews();
-        if (score>=10000){
-        	score=4;
-        }
-        else{
-        	if (score>=1000){
-        		score=3;
-        	}else{
-        		if (score>=100){
-        			score=2;
-        		}
-        		else{
-        			score=1;
-        		}
-        	}
-        }
+        int numviews = d.get_numviews();
+        double score = Math.log(numviews);
         return new ScoredDocument(did, d.get_title_string(), score);
     }
-
 }
 
 class phraseRunner implements SignalRunner {
