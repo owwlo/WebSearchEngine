@@ -12,14 +12,18 @@ import java.util.Date;
 public class ClickLoggingManager {
     private static ClickLoggingManager instance = null;
 
-    private static final String LOGGING_FILE = "./results/hw1.4-log.tsv";
-
     private PrintWriter out = null;
 
     private ClickLoggingManager() {
         try {
+            File file = new File("./results/");
+            if (!file.exists()) {
+                file = new File("../results/hw1.4-log.tsv");
+            } else {
+                file = new File("./results/hw1.4-log.tsv");
+            }
             out = new PrintWriter(
-                    new BufferedWriter(new FileWriter(new File(LOGGING_FILE).getAbsolutePath(),
+                    new BufferedWriter(new FileWriter(file.getAbsolutePath(),
                             true)));
         } catch (IOException e) {
             e.printStackTrace();

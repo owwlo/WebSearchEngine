@@ -124,7 +124,7 @@ class numViewRunner implements SignalRunner {
     public ScoredDocument runquery(String query, int did) {
         Document d = _index.getDoc(did);
         int numviews = d.get_numviews();
-        double score = Math.log(numviews);
+        double score = Math.log(numviews + 1);
         return new ScoredDocument(did, d.get_title_string(), score);
     }
 }

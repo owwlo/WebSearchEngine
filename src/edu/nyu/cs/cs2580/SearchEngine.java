@@ -25,7 +25,14 @@ public class SearchEngine {
 
         List<File> rootDirs = new ArrayList<File>();
         if (rootDirs.isEmpty()) {
-            rootDirs.add(new File("./public/.").getAbsoluteFile());
+            File test1 = new File("./public/.");
+            if (test1.exists()) {
+                rootDirs.add(test1.getAbsoluteFile());
+            }
+            File test2 = new File("../public/.");
+            if (test2.exists()) {
+                rootDirs.add(test2.getAbsoluteFile());
+            }
         }
         ServerRunner.executeInstance(new FileServer("", port, rootDirs, new QueryHandler(ranker)));
 

@@ -74,7 +74,7 @@ class Evaluator {
                     int did = Integer.parseInt(s.next());
                     String grade = s.next();
                     double rel = 0.0;
-                    // convert to binary relevance
+                    // convert to numeral relevance
                     if (grade.equalsIgnoreCase("Perfect")) {
                         rel = 10.0;
                     } else if (grade.equalsIgnoreCase("Excellent")) {
@@ -156,7 +156,7 @@ class Evaluator {
 
                     if (qr.get(did) > 1.0) { // for relevant output
                         // avg precision
-                        res.avgPrecision += res.RR / res.K;
+                        res.avgPrecision += res.K == 0.0? 0.0 : res.RR / res.K;
 
                         // reciprocal rank
                         if (res.reciprocalRank == 0.0) {
@@ -166,10 +166,18 @@ class Evaluator {
 
                 }
                 // precision-recall graph
-                double precision = (double) res.RR / res.K;
-                double recall = (double) res.RR / res.M;
-                double fmeasure = 1.0 / (0.5 * (1.0 / precision) + 0.5 * (1.0 / recall));
-                res.prGraph.put(recall, precision);
+                double precision = res.K == 0.0? 0.0 : (double) res.RR / res.K;
+                double recall = res.M == 0.0 ? 0.0 : (double) res.RR / res.M;
+                double fmeasure = precision == 0.0 && recall == 0.0? 0.0 :
+                		2*precision*recall/(precision + recall);
+                if (res.prGraph.containsKey(recall)){
+                	double val = res.prGraph.get(recall);
+                	if (val < precision){
+                		res.prGraph.put(recall, precision);
+                	}
+                }else{
+                	res.prGraph.put(recall, precision);
+                }
 
                 // sort the gain value
                 Object[] array = qr.values().toArray();
@@ -186,17 +194,17 @@ class Evaluator {
                     res.precision1 = precision;
                     res.recall1 = recall;
                     res.f1 = fmeasure;
-                    res.ndcg1 = res.dcg / idcg;
+                    res.ndcg1 = idcg == 0.0 ? 0.0 : res.dcg / idcg;
                 } else if (N == 5) {
                     res.precision5 = precision;
                     res.recall5 = recall;
                     res.f5 = fmeasure;
-                    res.ndcg5 = res.dcg / idcg;
+                    res.ndcg5 = idcg == 0.0 ? 0.0 : res.dcg / idcg;
                 } else if (N == 10) {
                     res.precision10 = precision;
                     res.recall10 = recall;
                     res.f10 = fmeasure;
-                    res.ndcg10 = res.dcg / idcg;
+                    res.ndcg10 = idcg == 0.0 ? 0.0 : res.dcg / idcg;
                 }
 
             }

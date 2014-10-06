@@ -70,7 +70,8 @@ public class QueryHandler implements HttpHandler {
                         && keys.contains("action")) {
                     ClickLoggingManager clm = ClickLoggingManager.getInstance();
 
-                    // Ensure the session will be the same when open multiple threads
+                    // Ensure the session will be the same when open multiple
+                    // threads
                     synchronized (clm) {
                         String session = (String) exchange.getAttribute("session");
                         if (session == null) {
@@ -115,7 +116,7 @@ public class QueryHandler implements HttpHandler {
 
                     // Sort result of ScoredDocuments
                     Collections.sort(sds, new ScoredDocumentComparator());
-                    
+
                     // We support both HTML and TEXT.
                     // Default format is TEXT.
                     String outputFormat = "text";
@@ -128,6 +129,10 @@ public class QueryHandler implements HttpHandler {
 
                         // Read initial html file
                         File htmlFile = new File("./public/index.html");
+                        if (!htmlFile.exists()) {
+                            htmlFile = new File("../public/index.html");
+                        }
+
                         InputStream fileIn = new FileInputStream(htmlFile);
                         byte[] data = new byte[(int) htmlFile.length()];
                         fileIn.read(data);
