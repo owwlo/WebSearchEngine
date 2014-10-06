@@ -1,51 +1,51 @@
+bing	52	bing	329.0
+bing	344	live search	329.0
+bing	354	msn search	329.0
+bing	637	web search engine	16.0
+bing	326	keyword (internet search)	10.0
+bing	519	search engine optimization	10.0
+bing	343	list of search engines	9.0
+bing	98	comparison of web search engines	8.0
+bing	373	microsoft	6.0
+bing	447	powerset (company)	6.0
+bing	250	google search	4.0
+bing	337	learning to rank	4.0
+bing	381	msnbot	4.0
+bing	518	search engine marketing	4.0
+bing	194	duckduckgo	3.0
+bing	336	leapfish	3.0
+bing	656	yebol	3.0
+bing	75	carrot2	2.0
+bing	152	data mining	2.0
+bing	492	robots.txt	2.0
+bing	493	robots exclusion standard	2.0
+bing	520	search engine results pages	2.0
+bing	525	semantic search	2.0
+bing	631	web mining	2.0
+bing	638	web search query	2.0
+bing	647	wolfram alpha	2.0
+bing	654	yahoo! search	2.0
 bing	21	altavista	1.0
 bing	35	ask.com	1.0
 bing	45	baidu	1.0
-bing	52	bing	1.0
-bing	75	carrot2	1.0
-bing	98	comparison of web search engines	1.0
 bing	117	computer vision	1.0
-bing	152	data mining	1.0
 bing	187	dogpile	1.0
-bing	194	duckduckgo	1.0
 bing	241	geographic information systems	1.0
 bing	244	go.com	1.0
 bing	245	goby inc.	1.0
 bing	247	google	1.0
-bing	250	google search	1.0
 bing	276	index (search engine)	1.0
 bing	277	info.com	1.0
-bing	326	keyword (internet search)	1.0
-bing	336	leapfish	1.0
-bing	337	learning to rank	1.0
-bing	343	list of search engines	1.0
-bing	344	live search	1.0
-bing	354	msn search	1.0
 bing	355	machine learning	1.0
 bing	369	meta tags	1.0
-bing	373	microsoft	1.0
-bing	381	msnbot	1.0
 bing	401	naver	1.0
 bing	427	organic search	1.0
-bing	447	powerset (company)	1.0
 bing	466	quaero	1.0
-bing	492	robots.txt	1.0
-bing	493	robots exclusion standard	1.0
 bing	517	search engine indexing	1.0
-bing	518	search engine marketing	1.0
-bing	519	search engine optimization	1.0
-bing	520	search engine results pages	1.0
-bing	525	semantic search	1.0
 bing	619	volunia	1.0
 bing	622	webcrawler	1.0
 bing	625	web crawler	1.0
 bing	626	web crawling	1.0
-bing	631	web mining	1.0
-bing	637	web search engine	1.0
-bing	638	web search query	1.0
-bing	647	wolfram alpha	1.0
-bing	654	yahoo! search	1.0
-bing	656	yebol	1.0
 bing	0	1890 us census	0.0
 bing	1	a9.com	0.0
 bing	2	acm computing classification system	0.0
@@ -657,148 +657,164 @@ bing	653	yahoo!	0.0
 bing	655	yandex	0.0
 bing	657	yummly	0.0
 bing	658	z39.50	0.0
+data mining	152	data mining	212.0
+data mining	424	oracle data mining	55.0
+data mining	37	association rule	23.0
+data mining	38	association rule learning	23.0
+data mining	39	association rule mining	23.0
+data mining	40	association rules	23.0
+data mining	487	rexer's annual data miner survey	23.0
+data mining	196	educational data mining	22.0
+data mining	153	data mining in agriculture	19.0
+data mining	70	crisp-dm	18.0
+data mining	128	cross industry standard process for data mining	18.0
+data mining	505	spss modeler	15.0
+data mining	88	cluster analysis	14.0
+data mining	143	data clustering	14.0
+data mining	476	rapidminer	14.0
+data mining	631	web mining	14.0
+data mining	501	semma	13.0
+data mining	573	temporal information retrieval	13.0
+data mining	168	decision tree learning	12.0
+data mining	355	machine learning	12.0
+data mining	138	data mining extensions	11.0
+data mining	384	multifactor dimensionality reduction	11.0
+data mining	314	java data mining	10.0
+data mining	374	microsoft analysis services	10.0
+data mining	449	predictive model markup language	10.0
+data mining	154	data mining in meteorology	9.0
+data mining	340	list of computer science conferences	9.0
+data mining	458	profiling practices	9.0
+data mining	160	data visualization	8.0
+data mining	328	knowledge discovery	7.0
+data mining	578	text mining	7.0
+data mining	146	data dredging	6.0
+data mining	157	data snooping	6.0
+data mining	202	environment for developing kdd-applications supported by index-structures	6.0
+data mining	311	jhepwork	6.0
+data mining	473	r (programming language)	6.0
+data mining	527	sequence mining	6.0
+data mining	554	statsoft	6.0
+data mining	241	geographic information systems	5.0
+data mining	411	olap cube	5.0
+data mining	467	quantitative structure%e2%80%93activity relationship	5.0
+data mining	563	subspace clustering	5.0
+data mining	591	trevor hastie	5.0
+data mining	642	weka (machine learning)	5.0
+data mining	26	angoss	4.0
+data mining	63	business intelligence	4.0
+data mining	64	business intelligence tools	4.0
+data mining	122	conference on knowledge discovery and data mining	4.0
+data mining	132	customer analytics	4.0
+data mining	161	data warehouse	4.0
+data mining	181	discovery net	4.0
+data mining	213	exploratory data analysis	4.0
+data mining	321	kdd conference	4.0
+data mining	359	market basket analysis	4.0
+data mining	414	online analytical processing	4.0
+data mining	444	police-enforced anpr in the uk	4.0
+data mining	450	predictive analytics	4.0
+data mining	502	sigkdd	4.0
+data mining	507	statistica	4.0
+data mining	567	surveillance	4.0
+data mining	587	total information awareness	4.0
+data mining	27	anomaly detection	3.0
+data mining	31	artificial intelligence	3.0
+data mining	53	bioinformatic	3.0
+data mining	54	bioinformatics	3.0
+data mining	116	computer science	3.0
+data mining	139	data pre-processing	3.0
+data mining	140	data vault modeling	3.0
+data mining	141	data analysis	3.0
+data mining	322	knime	3.0
+data mining	337	learning to rank	3.0
+data mining	349	matrix	3.0
+data mining	360	mass surveillance	3.0
+data mining	370	metadata	3.0
+data mining	396	national security agency	3.0
+data mining	477	reactive business intelligence	3.0
+data mining	499	sas (software)	3.0
+data mining	636	web scraping	3.0
+data mining	652	xml for analysis	3.0
+data mining	13	aggregate (data warehouse)	2.0
+data mining	25	anchor modeling	2.0
+data mining	49	bill inmon	2.0
+data mining	93	column-oriented dbms	2.0
+data mining	97	comparison of olap servers	2.0
+data mining	136	dashboard (business)	2.0
+data mining	142	data cleaning	2.0
+data mining	145	data dictionary	2.0
+data mining	147	data extraction	2.0
+data mining	149	data loading	2.0
+data mining	151	data mart	2.0
+data mining	156	data set	2.0
+data mining	159	data transformation	2.0
+data mining	162	database	2.0
+data mining	167	decision support system	2.0
+data mining	171	degenerate dimension	2.0
+data mining	175	dimension (data warehouse)	2.0
+data mining	176	dimension reduction	2.0
+data mining	177	dimension table	2.0
+data mining	178	dimensional modeling	2.0
+data mining	195	early-arriving fact	2.0
+data mining	212	expertise finding	2.0
+data mining	215	extract, transform, load	2.0
+data mining	220	fact (data warehouse)	2.0
+data mining	221	fact table	2.0
+data mining	256	holap	2.0
+data mining	284	information integration	2.0
+data mining	323	kxen inc.	2.0
+data mining	342	list of reporting software	2.0
+data mining	353	molap	2.0
+data mining	366	measure (data warehouse)	2.0
+data mining	383	multidimensional expressions	2.0
+data mining	422	operational data store	2.0
+data mining	426	orange (software)	2.0
+data mining	472	rolap	2.0
+data mining	474	ralph kimball	2.0
+data mining	479	receiver operating characteristic	2.0
+data mining	506	sql	2.0
+data mining	529	sixth normal form	2.0
+data mining	530	slowly changing dimension	2.0
+data mining	552	star schema	2.0
+data mining	555	statistical classification	2.0
+data mining	556	statistical inference	2.0
+data mining	559	statistics	2.0
+data mining	603	uplift modelling	2.0
 data mining	3	advise	1.0
 data mining	9	actuate corporation	1.0
-data mining	13	aggregate (data warehouse)	1.0
 data mining	24	analytics	1.0
-data mining	25	anchor modeling	1.0
-data mining	26	angoss	1.0
-data mining	27	anomaly detection	1.0
-data mining	31	artificial intelligence	1.0
 data mining	32	artificial life	1.0
 data mining	33	artificial neural network	1.0
 data mining	36	association for computing machinery	1.0
-data mining	37	association rule	1.0
-data mining	38	association rule learning	1.0
-data mining	39	association rule mining	1.0
-data mining	40	association rules	1.0
 data mining	48	bibliometrics	1.0
-data mining	49	bill inmon	1.0
-data mining	53	bioinformatic	1.0
-data mining	54	bioinformatics	1.0
-data mining	63	business intelligence	1.0
-data mining	64	business intelligence tools	1.0
-data mining	70	crisp-dm	1.0
 data mining	84	churn rate	1.0
-data mining	88	cluster analysis	1.0
 data mining	91	collaborative information seeking	1.0
-data mining	93	column-oriented dbms	1.0
-data mining	97	comparison of olap servers	1.0
 data mining	115	computer programming	1.0
-data mining	116	computer science	1.0
-data mining	122	conference on knowledge discovery and data mining	1.0
-data mining	128	cross industry standard process for data mining	1.0
-data mining	132	customer analytics	1.0
 data mining	133	customer relationship management	1.0
 data mining	135	dna	1.0
-data mining	136	dashboard (business)	1.0
 data mining	137	data	1.0
-data mining	138	data mining extensions	1.0
-data mining	139	data pre-processing	1.0
-data mining	140	data vault modeling	1.0
-data mining	141	data analysis	1.0
-data mining	142	data cleaning	1.0
-data mining	143	data clustering	1.0
-data mining	145	data dictionary	1.0
-data mining	146	data dredging	1.0
-data mining	147	data extraction	1.0
-data mining	149	data loading	1.0
 data mining	150	data management	1.0
-data mining	151	data mart	1.0
-data mining	152	data mining	1.0
-data mining	153	data mining in agriculture	1.0
-data mining	154	data mining in meteorology	1.0
-data mining	156	data set	1.0
-data mining	157	data snooping	1.0
-data mining	159	data transformation	1.0
-data mining	160	data visualization	1.0
-data mining	161	data warehouse	1.0
-data mining	162	database	1.0
-data mining	167	decision support system	1.0
-data mining	168	decision tree learning	1.0
-data mining	171	degenerate dimension	1.0
-data mining	175	dimension (data warehouse)	1.0
-data mining	176	dimension reduction	1.0
-data mining	177	dimension table	1.0
-data mining	178	dimensional modeling	1.0
-data mining	181	discovery net	1.0
 data mining	188	don swanson	1.0
 data mining	189	donald b. crouch	1.0
-data mining	195	early-arriving fact	1.0
-data mining	196	educational data mining	1.0
-data mining	202	environment for developing kdd-applications supported by index-structures	1.0
 data mining	205	european conference on machine learning and principles and practice of knowledge discovery in databases	1.0
-data mining	212	expertise finding	1.0
-data mining	213	exploratory data analysis	1.0
-data mining	215	extract, transform, load	1.0
-data mining	220	fact (data warehouse)	1.0
-data mining	221	fact table	1.0
 data mining	229	formal methods	1.0
 data mining	237	genetic algorithms	1.0
-data mining	241	geographic information systems	1.0
-data mining	256	holap	1.0
 data mining	278	informatics (academic field)	1.0
-data mining	284	information integration	1.0
 data mining	288	information retrieval	1.0
 data mining	293	information technology	1.0
-data mining	311	jhepwork	1.0
-data mining	314	java data mining	1.0
 data mining	315	john nunn	1.0
-data mining	321	kdd conference	1.0
-data mining	322	knime	1.0
-data mining	323	kxen inc.	1.0
-data mining	328	knowledge discovery	1.0
 data mining	330	knowledge visualization	1.0
 data mining	331	lionsolver	1.0
-data mining	337	learning to rank	1.0
-data mining	340	list of computer science conferences	1.0
-data mining	342	list of reporting software	1.0
-data mining	349	matrix	1.0
 data mining	352	ml-flex	1.0
-data mining	353	molap	1.0
-data mining	355	machine learning	1.0
-data mining	359	market basket analysis	1.0
-data mining	360	mass surveillance	1.0
-data mining	366	measure (data warehouse)	1.0
-data mining	370	metadata	1.0
-data mining	374	microsoft analysis services	1.0
-data mining	383	multidimensional expressions	1.0
-data mining	384	multifactor dimensionality reduction	1.0
-data mining	396	national security agency	1.0
 data mining	398	natural language processing	1.0
 data mining	404	neural networks	1.0
-data mining	411	olap cube	1.0
-data mining	414	online analytical processing	1.0
-data mining	422	operational data store	1.0
-data mining	424	oracle data mining	1.0
-data mining	426	orange (software)	1.0
 data mining	440	personal information management	1.0
-data mining	444	police-enforced anpr in the uk	1.0
 data mining	448	precision and recall	1.0
-data mining	449	predictive model markup language	1.0
-data mining	450	predictive analytics	1.0
-data mining	458	profiling practices	1.0
 data mining	460	programming paradigm	1.0
-data mining	467	quantitative structure%e2%80%93activity relationship	1.0
 data mining	470	question answering	1.0
-data mining	472	rolap	1.0
-data mining	473	r (programming language)	1.0
-data mining	474	ralph kimball	1.0
-data mining	476	rapidminer	1.0
-data mining	477	reactive business intelligence	1.0
-data mining	479	receiver operating characteristic	1.0
 data mining	486	requirements analysis	1.0
-data mining	487	rexer's annual data miner survey	1.0
-data mining	499	sas (software)	1.0
 data mining	500	sas institute	1.0
-data mining	501	semma	1.0
-data mining	502	sigkdd	1.0
-data mining	505	spss modeler	1.0
-data mining	506	sql	1.0
-data mining	507	statistica	1.0
-data mining	527	sequence mining	1.0
-data mining	529	sixth normal form	1.0
-data mining	530	slowly changing dimension	1.0
 data mining	534	society for industrial and applied mathematics	1.0
 data mining	536	software design	1.0
 data mining	538	software engineering	1.0
@@ -806,29 +822,13 @@ data mining	540	software testing	1.0
 data mining	542	sorrell v. ims health, inc.	1.0
 data mining	545	special interest group on information retrieval	1.0
 data mining	548	spreadsheets	1.0
-data mining	552	star schema	1.0
-data mining	554	statsoft	1.0
-data mining	555	statistical classification	1.0
-data mining	556	statistical inference	1.0
-data mining	559	statistics	1.0
 data mining	560	stellar wind (code name)	1.0
-data mining	563	subspace clustering	1.0
 data mining	564	support vector machines	1.0
-data mining	567	surveillance	1.0
 data mining	570	tablebase	1.0
-data mining	573	temporal information retrieval	1.0
-data mining	578	text mining	1.0
-data mining	587	total information awareness	1.0
-data mining	591	trevor hastie	1.0
-data mining	603	uplift modelling	1.0
 data mining	616	visualization (computer graphics)	1.0
-data mining	631	web mining	1.0
 data mining	634	web query classification	1.0
-data mining	636	web scraping	1.0
 data mining	637	web search engine	1.0
-data mining	642	weka (machine learning)	1.0
 data mining	646	wireless sensor network	1.0
-data mining	652	xml for analysis	1.0
 data mining	0	1890 us census	0.0
 data mining	1	a9.com	0.0
 data mining	2	acm computing classification system	0.0
@@ -1316,251 +1316,251 @@ data mining	655	yandex	0.0
 data mining	656	yebol	0.0
 data mining	657	yummly	0.0
 data mining	658	z39.50	0.0
+google	247	google	692.0
+google	250	google search	298.0
+google	249	google drive	274.0
+google	248	google bombing	170.0
+google	433	pagerank	111.0
+google	326	keyword (internet search)	92.0
+google	519	search engine optimization	92.0
+google	52	bing	49.0
+google	344	live search	49.0
+google	354	msn search	49.0
+google	637	web search engine	36.0
+google	360	mass surveillance	26.0
+google	225	filter bubble	24.0
+google	596	us congress	24.0
+google	345	local search (internet)	20.0
+google	408	number theory	20.0
+google	369	meta tags	19.0
+google	373	microsoft	19.0
+google	653	yahoo!	19.0
+google	45	baidu	18.0
+google	343	list of search engines	18.0
+google	465	python (programming language)	18.0
+google	219	facebook	17.0
+google	655	yandex	17.0
+google	228	forestle	16.0
+google	252	gopher (protocol)	16.0
+google	194	duckduckgo	15.0
+google	518	search engine marketing	15.0
+google	62	british petroleum	14.0
+google	130	cuil	14.0
+google	305	internet search engines and libraries	14.0
+google	567	surveillance	14.0
+google	619	volunia	14.0
+google	204	europe	13.0
+google	533	social search	13.0
+google	644	wikia search	13.0
+google	59	boolean algebra	12.0
+google	98	comparison of web search engines	11.0
+google	268	ibm	11.0
+google	313	java (programming language)	11.0
+google	22	alvin weinberg	10.0
+google	339	linkrot	10.0
+google	446	power transformer	10.0
+google	4	aol	9.0
+google	5	aol search	9.0
+google	492	robots.txt	9.0
+google	493	robots exclusion standard	9.0
+google	438	people's republic of china	8.0
+google	565	supreme court of the united states	8.0
+google	647	wolfram alpha	8.0
+google	648	world wide web	8.0
+google	57	blekko	7.0
+google	336	leapfish	7.0
+google	361	massachusetts institute of technology	7.0
+google	473	r (programming language)	7.0
+google	539	software release life cycle	7.0
+google	73	cancer	6.0
+google	251	google effect	6.0
+google	351	mit	6.0
+google	379	montreal	6.0
+google	421	operating system	6.0
+google	427	organic search	6.0
+google	584	tim berners-lee	6.0
+google	19	alltheweb	5.0
+google	35	ask.com	5.0
+google	56	blackle.com	5.0
+google	172	desktop search	5.0
+google	419	open directory project	5.0
+google	447	powerset (company)	5.0
+google	461	proximity search (text)	5.0
+google	508	scalability	5.0
+google	525	semantic search	5.0
+google	613	video search engine	5.0
+google	23	analysis of algorithms	4.0
+google	87	cloud storage	4.0
+google	123	contextual advertising	4.0
+google	199	eli pariser	4.0
+google	209	excite	4.0
+google	226	first amendment to the united states constitution	4.0
+google	266	human rights	4.0
+google	276	index (search engine)	4.0
+google	296	initial public offering	4.0
+google	356	magellan (search engine)	4.0
+google	363	mathematics	4.0
+google	399	natural language search engine	4.0
+google	420	open drive	4.0
+google	466	quaero	4.0
+google	485	representational state transfer	4.0
+google	513	search aggregator	4.0
+google	517	search engine indexing	4.0
+google	546	spell checker	4.0
+google	625	web crawler	4.0
+google	626	web crawling	4.0
+google	654	yahoo! search	4.0
+google	656	yebol	4.0
+google	7	academic journal	3.0
+google	12	advertising	3.0
+google	15	alan emtage	3.0
+google	21	altavista	3.0
+google	61	bram stoker	3.0
+google	79	censorship	3.0
+google	112	computer graphics	3.0
+google	165	daum communications	3.0
+google	170	deepwater horizon oil spill	3.0
+google	190	dot-com bubble	3.0
+google	192	dracula	3.0
+google	241	geographic information systems	3.0
+google	257	html	3.0
+google	287	information overload	3.0
+google	294	information theory	3.0
+google	299	insulator (electrical)	3.0
+google	309	j. c. r. licklider	3.0
+google	311	jhepwork	3.0
+google	337	learning to rank	3.0
+google	428	orthogonality	3.0
+google	452	preservation (library and archival science)	3.0
+google	453	principle of least astonishment	3.0
+google	497	russian federation	3.0
+google	621	wearable computer	3.0
+google	635	web robot	3.0
+google	27	anomaly detection	2.0
+google	28	archie comics	2.0
+google	48	bibliometrics	2.0
+google	74	carnegie mellon university	2.0
+google	81	chemicalize.org	2.0
+google	117	computer vision	2.0
+google	200	emanuel goldberg	2.0
+google	208	exalead	2.0
+google	222	factor analysis	2.0
+google	223	federated search	2.0
+google	233	gnu project	2.0
+google	235	general architecture for text engineering	2.0
+google	282	information architecture	2.0
+google	293	information technology	2.0
+google	297	inktomi (company)	2.0
+google	301	intellectual property	2.0
+google	328	knowledge discovery	2.0
+google	364	mcgill university	2.0
+google	401	naver	2.0
+google	402	netscape	2.0
+google	412	object-oriented programming	2.0
+google	414	online analytical processing	2.0
+google	434	paid inclusion	2.0
+google	460	programming paradigm	2.0
+google	487	rexer's annual data miner survey	2.0
+google	496	rule of inference	2.0
+google	511	searchme	2.0
+google	514	search directory	2.0
+google	520	search engine results pages	2.0
+google	522	selection-based search	2.0
+google	538	software engineering	2.0
+google	548	spreadsheets	2.0
+google	572	telecommunication	2.0
+google	582	theory of forms	2.0
+google	592	true knowledge	2.0
+google	608	vannevar bush	2.0
+google	618	voice search	2.0
+google	623	web archiving	2.0
+google	624	web cache	2.0
+google	627	web directories	2.0
+google	628	web directory	2.0
+google	636	web scraping	2.0
 google	1	a9.com	1.0
-google	4	aol	1.0
-google	5	aol search	1.0
-google	7	academic journal	1.0
 google	8	accuracy and precision	1.0
 google	9	actuate corporation	1.0
-google	12	advertising	1.0
-google	15	alan emtage	1.0
 google	16	algorithm	1.0
 google	18	aliweb	1.0
-google	19	alltheweb	1.0
-google	21	altavista	1.0
-google	22	alvin weinberg	1.0
-google	23	analysis of algorithms	1.0
 google	24	analytics	1.0
-google	27	anomaly detection	1.0
-google	28	archie comics	1.0
 google	30	argonne national laboratory	1.0
 google	31	artificial intelligence	1.0
-google	35	ask.com	1.0
 google	37	association rule	1.0
 google	38	association rule learning	1.0
 google	39	association rule mining	1.0
 google	40	association rules	1.0
 google	43	automated reasoning	1.0
 google	44	automatic summarization	1.0
-google	45	baidu	1.0
 google	46	bayes' theorem	1.0
-google	48	bibliometrics	1.0
-google	52	bing	1.0
-google	56	blackle.com	1.0
-google	57	blekko	1.0
-google	59	boolean algebra	1.0
-google	61	bram stoker	1.0
-google	62	british petroleum	1.0
-google	73	cancer	1.0
-google	74	carnegie mellon university	1.0
 google	75	carrot2	1.0
-google	79	censorship	1.0
 google	80	chacha (search engine)	1.0
-google	81	chemicalize.org	1.0
 google	82	chess	1.0
-google	87	cloud storage	1.0
 google	88	cluster analysis	1.0
 google	91	collaborative information seeking	1.0
 google	94	combinatorial game	1.0
 google	95	combinatorics	1.0
-google	98	comparison of web search engines	1.0
-google	112	computer graphics	1.0
 google	113	computer music	1.0
 google	116	computer science	1.0
-google	117	computer vision	1.0
-google	123	contextual advertising	1.0
-google	130	cuil	1.0
 google	131	cultural studies	1.0
 google	133	customer relationship management	1.0
 google	143	data clustering	1.0
 google	156	data set	1.0
-google	165	daum communications	1.0
-google	170	deepwater horizon oil spill	1.0
-google	172	desktop search	1.0
 google	173	digital object identifier	1.0
 google	184	distributed web crawling	1.0
 google	187	dogpile	1.0
-google	190	dot-com bubble	1.0
-google	192	dracula	1.0
-google	194	duckduckgo	1.0
-google	199	eli pariser	1.0
-google	200	emanuel goldberg	1.0
-google	204	europe	1.0
-google	208	exalead	1.0
-google	209	excite	1.0
-google	219	facebook	1.0
-google	222	factor analysis	1.0
-google	223	federated search	1.0
-google	225	filter bubble	1.0
-google	226	first amendment to the united states constitution	1.0
-google	228	forestle	1.0
-google	233	gnu project	1.0
-google	235	general architecture for text engineering	1.0
 google	239	genieknows	1.0
-google	241	geographic information systems	1.0
 google	245	goby inc.	1.0
-google	247	google	1.0
-google	248	google bombing	1.0
-google	249	google drive	1.0
-google	250	google search	1.0
-google	251	google effect	1.0
-google	252	gopher (protocol)	1.0
 google	253	graph theory	1.0
 google	255	guruji.com	1.0
-google	257	html	1.0
 google	263	hotbot	1.0
-google	266	human rights	1.0
-google	268	ibm	1.0
 google	271	image processing	1.0
-google	276	index (search engine)	1.0
 google	277	info.com	1.0
-google	282	information architecture	1.0
-google	287	information overload	1.0
-google	293	information technology	1.0
-google	294	information theory	1.0
-google	296	initial public offering	1.0
-google	297	inktomi (company)	1.0
-google	299	insulator (electrical)	1.0
-google	301	intellectual property	1.0
-google	305	internet search engines and libraries	1.0
-google	309	j. c. r. licklider	1.0
-google	311	jhepwork	1.0
 google	312	jacquard loom	1.0
-google	313	java (programming language)	1.0
 google	320	jumpstation	1.0
-google	326	keyword (internet search)	1.0
-google	328	knowledge discovery	1.0
-google	336	leapfish	1.0
-google	337	learning to rank	1.0
-google	339	linkrot	1.0
-google	343	list of search engines	1.0
-google	344	live search	1.0
-google	345	local search (internet)	1.0
 google	346	logic programming	1.0
 google	348	lycos	1.0
-google	351	mit	1.0
-google	354	msn search	1.0
 google	355	machine learning	1.0
-google	356	magellan (search engine)	1.0
-google	360	mass surveillance	1.0
-google	361	massachusetts institute of technology	1.0
-google	363	mathematics	1.0
-google	364	mcgill university	1.0
-google	369	meta tags	1.0
 google	370	metadata	1.0
-google	373	microsoft	1.0
-google	379	montreal	1.0
 google	391	nltk	1.0
 google	397	natural language toolkit	1.0
-google	399	natural language search engine	1.0
-google	401	naver	1.0
-google	402	netscape	1.0
 google	404	neural networks	1.0
-google	408	number theory	1.0
 google	410	oclc	1.0
 google	411	olap cube	1.0
-google	412	object-oriented programming	1.0
-google	414	online analytical processing	1.0
 google	416	ontologies	1.0
 google	417	ontology (information science)	1.0
 google	418	opensearch	1.0
-google	419	open directory project	1.0
-google	420	open drive	1.0
-google	421	operating system	1.0
-google	427	organic search	1.0
-google	428	orthogonality	1.0
 google	430	outline of information science	1.0
-google	433	pagerank	1.0
-google	434	paid inclusion	1.0
 google	437	pattern	1.0
-google	438	people's republic of china	1.0
 google	439	perl	1.0
-google	446	power transformer	1.0
-google	447	powerset (company)	1.0
-google	452	preservation (library and archival science)	1.0
-google	453	principle of least astonishment	1.0
 google	454	privacy	1.0
-google	460	programming paradigm	1.0
-google	461	proximity search (text)	1.0
 google	462	pubmed identifier	1.0
-google	465	python (programming language)	1.0
-google	466	quaero	1.0
 google	468	quantum computer	1.0
 google	470	question answering	1.0
 google	471	quora	1.0
-google	473	r (programming language)	1.0
 google	484	relevance feedback	1.0
-google	485	representational state transfer	1.0
 google	486	requirements analysis	1.0
-google	487	rexer's annual data miner survey	1.0
 google	491	robotics	1.0
-google	492	robots.txt	1.0
-google	493	robots exclusion standard	1.0
-google	496	rule of inference	1.0
-google	497	russian federation	1.0
-google	508	scalability	1.0
 google	510	scientific american magazine	1.0
-google	511	searchme	1.0
 google	512	search engine watch	1.0
-google	513	search aggregator	1.0
-google	514	search directory	1.0
-google	517	search engine indexing	1.0
-google	518	search engine marketing	1.0
-google	519	search engine optimization	1.0
-google	520	search engine results pages	1.0
-google	522	selection-based search	1.0
 google	524	semantic web	1.0
-google	525	semantic search	1.0
-google	533	social search	1.0
-google	538	software engineering	1.0
-google	539	software release life cycle	1.0
 google	540	software testing	1.0
-google	546	spell checker	1.0
-google	548	spreadsheets	1.0
 google	556	statistical inference	1.0
-google	565	supreme court of the united states	1.0
-google	567	surveillance	1.0
 google	570	tablebase	1.0
-google	572	telecommunication	1.0
 google	574	teoma	1.0
 google	576	text retrieval conference	1.0
 google	577	text corpora	1.0
 google	581	theodor nelson	1.0
-google	582	theory of forms	1.0
-google	584	tim berners-lee	1.0
-google	592	true knowledge	1.0
-google	596	us congress	1.0
-google	608	vannevar bush	1.0
 google	612	vertical search	1.0
-google	613	video search engine	1.0
 google	614	viewzi	1.0
 google	615	virtual reality	1.0
-google	618	voice search	1.0
-google	619	volunia	1.0
 google	620	w3catalog	1.0
-google	621	wearable computer	1.0
 google	622	webcrawler	1.0
-google	623	web archiving	1.0
-google	624	web cache	1.0
-google	625	web crawler	1.0
-google	626	web crawling	1.0
-google	627	web directories	1.0
-google	628	web directory	1.0
 google	631	web mining	1.0
-google	635	web robot	1.0
-google	636	web scraping	1.0
-google	637	web search engine	1.0
 google	639	webserver	1.0
 google	641	website mirroring software	1.0
-google	644	wikia search	1.0
 google	645	wikiseek	1.0
-google	647	wolfram alpha	1.0
-google	648	world wide web	1.0
 google	651	xml-retrieval	1.0
-google	653	yahoo!	1.0
-google	654	yahoo! search	1.0
-google	655	yandex	1.0
-google	656	yebol	1.0
 google	657	yummly	1.0
 google	0	1890 us census	0.0
 google	2	acm computing classification system	0.0
@@ -2634,110 +2634,110 @@ salsa	655	yandex	0.0
 salsa	656	yebol	0.0
 salsa	657	yummly	0.0
 salsa	658	z39.50	0.0
-web search	1	a9.com	1.0
-web search	10	adversarial information retrieval	1.0
+web search	573	temporal information retrieval	15.0
+web search	250	google search	13.0
+web search	637	web search engine	13.0
+web search	92	collaborative search engine	8.0
+web search	638	web search query	8.0
+web search	644	wikia search	8.0
+web search	201	enterprise search	7.0
+web search	634	web query classification	7.0
+web search	52	bing	6.0
+web search	344	live search	6.0
+web search	354	msn search	6.0
+web search	247	google	5.0
+web search	371	metasearch engine	5.0
+web search	433	pagerank	5.0
+web search	576	text retrieval conference	5.0
+web search	625	web crawler	5.0
+web search	626	web crawling	5.0
+web search	654	yahoo! search	5.0
+web search	184	distributed web crawling	4.0
+web search	263	hotbot	4.0
+web search	288	information retrieval	4.0
+web search	515	search engine (computing)	4.0
+web search	533	social search	4.0
+web search	35	ask.com	3.0
+web search	81	chemicalize.org	3.0
+web search	91	collaborative information seeking	3.0
+web search	227	focused crawler	3.0
+web search	276	index (search engine)	3.0
+web search	337	learning to rank	3.0
+web search	345	local search (internet)	3.0
+web search	415	online search	3.0
+web search	517	search engine indexing	3.0
+web search	522	selection-based search	3.0
+web search	525	semantic search	3.0
+web search	574	teoma	3.0
+web search	630	web indexing	3.0
+web search	1	a9.com	2.0
+web search	10	adversarial information retrieval	2.0
+web search	57	blekko	2.0
+web search	75	carrot2	2.0
+web search	80	chacha (search engine)	2.0
+web search	152	data mining	2.0
+web search	194	duckduckgo	2.0
+web search	208	exalead	2.0
+web search	209	excite	2.0
+web search	223	federated search	2.0
+web search	290	information science	2.0
+web search	291	information seeking	2.0
+web search	326	keyword (internet search)	2.0
+web search	343	list of search engines	2.0
+web search	356	magellan (search engine)	2.0
+web search	388	multisearch	2.0
+web search	399	natural language search engine	2.0
+web search	418	opensearch	2.0
+web search	443	picollator	2.0
+web search	461	proximity search (text)	2.0
+web search	513	search aggregator	2.0
+web search	516	search engine (disambiguation)	2.0
+web search	519	search engine optimization	2.0
+web search	524	semantic web	2.0
+web search	547	spider trap	2.0
+web search	612	vertical search	2.0
+web search	618	voice search	2.0
+web search	619	volunia	2.0
+web search	640	website parse template	2.0
+web search	643	wide area information server	2.0
+web search	656	yebol	2.0
+web search	658	z39.50	2.0
 web search	18	aliweb	1.0
 web search	19	alltheweb	1.0
 web search	21	altavista	1.0
-web search	35	ask.com	1.0
 web search	45	baidu	1.0
-web search	52	bing	1.0
 web search	56	blackle.com	1.0
-web search	57	blekko	1.0
-web search	75	carrot2	1.0
-web search	80	chacha (search engine)	1.0
-web search	81	chemicalize.org	1.0
-web search	91	collaborative information seeking	1.0
-web search	92	collaborative search engine	1.0
 web search	130	cuil	1.0
-web search	152	data mining	1.0
 web search	179	discounted cumulative gain	1.0
-web search	184	distributed web crawling	1.0
-web search	194	duckduckgo	1.0
-web search	201	enterprise search	1.0
 web search	206	european summer school in information retrieval	1.0
-web search	208	exalead	1.0
-web search	209	excite	1.0
-web search	223	federated search	1.0
-web search	227	focused crawler	1.0
 web search	228	forestle	1.0
 web search	239	genieknows	1.0
-web search	247	google	1.0
 web search	248	google bombing	1.0
 web search	249	google drive	1.0
-web search	250	google search	1.0
-web search	263	hotbot	1.0
-web search	276	index (search engine)	1.0
-web search	288	information retrieval	1.0
 web search	289	information retrieval applications	1.0
-web search	290	information science	1.0
-web search	291	information seeking	1.0
 web search	297	inktomi (company)	1.0
 web search	320	jumpstation	1.0
-web search	326	keyword (internet search)	1.0
-web search	337	learning to rank	1.0
-web search	343	list of search engines	1.0
-web search	344	live search	1.0
-web search	345	local search (internet)	1.0
-web search	354	msn search	1.0
-web search	356	magellan (search engine)	1.0
-web search	371	metasearch engine	1.0
 web search	382	mugurdy	1.0
-web search	388	multisearch	1.0
-web search	399	natural language search engine	1.0
 web search	407	northern light group	1.0
-web search	415	online search	1.0
-web search	418	opensearch	1.0
-web search	433	pagerank	1.0
-web search	443	picollator	1.0
 web search	448	precision and recall	1.0
 web search	456	probabilistic relevance model (bm25)	1.0
 web search	459	programming language	1.0
-web search	461	proximity search (text)	1.0
 web search	483	relevance (information retrieval)	1.0
 web search	484	relevance feedback	1.0
-web search	513	search aggregator	1.0
 web search	514	search directory	1.0
-web search	515	search engine (computing)	1.0
-web search	516	search engine (disambiguation)	1.0
-web search	517	search engine indexing	1.0
-web search	519	search engine optimization	1.0
 web search	520	search engine results pages	1.0
-web search	522	selection-based search	1.0
-web search	524	semantic web	1.0
-web search	525	semantic search	1.0
-web search	533	social search	1.0
 web search	545	special interest group on information retrieval	1.0
-web search	547	spider trap	1.0
 web search	550	sproose	1.0
 web search	567	surveillance	1.0
-web search	573	temporal information retrieval	1.0
-web search	574	teoma	1.0
-web search	576	text retrieval conference	1.0
-web search	612	vertical search	1.0
-web search	618	voice search	1.0
-web search	619	volunia	1.0
 web search	620	w3catalog	1.0
 web search	622	webcrawler	1.0
-web search	625	web crawler	1.0
-web search	626	web crawling	1.0
 web search	627	web directories	1.0
 web search	628	web directory	1.0
-web search	630	web indexing	1.0
-web search	634	web query classification	1.0
-web search	637	web search engine	1.0
-web search	638	web search query	1.0
-web search	640	website parse template	1.0
-web search	643	wide area information server	1.0
-web search	644	wikia search	1.0
 web search	645	wikiseek	1.0
 web search	648	world wide web	1.0
 web search	653	yahoo!	1.0
-web search	654	yahoo! search	1.0
 web search	655	yandex	1.0
-web search	656	yebol	1.0
 web search	657	yummly	1.0
-web search	658	z39.50	1.0
 web search	0	1890 us census	0.0
 web search	2	acm computing classification system	0.0
 web search	3	advise	0.0
