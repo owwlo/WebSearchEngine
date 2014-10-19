@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Scanner;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -267,17 +268,61 @@ public class IndexerInvertedDoconly extends Indexer {
         initialStore(true);
     }
 
-    @Override
-    public Document getDoc(int docid) {
-        return docMap.get(docid);
-    }
-
+    
     /**
      * In HW2, you should be using {@link DocumentIndexed}
      */
+   /* private int nextDocForTerm(String term,int docid,List<Integer> targetArray){
+    	List<Integer> target=docInvertedMap.
+    }*/
+    
+    private int nextForOne(String term,int docId,Vector<List<Integer> >postinglists){
+    	
+    	
+    	
+    	
+    	return -1;
+    }     
+    
+    private int next(Vector<String> tokens, int docId,Vector<List<Integer>> postinglists){
+    	int[] docIds=new int[tokens.size()];
+    	int previousVal=-1;
+        boolean equilibrium=true;
+        int maximum=Integer.MIN_VALUE;
+    	for (int i=0;i<tokens.size();i++){
+    		int currentId=nextForOne(tokens.get(i),docId,postinglists);
+    		if (currentId<0)
+    			return -1;
+    		if (previousVal<0){
+    			previousVal=currentId;
+    			maximum=currentId;
+    		}
+    		else {
+    			if (previousVal!=currentId){
+    				equilibrium=false;
+    				maximum=Math.max(maximum, currentId);
+    			}
+    		}   		
+    	}
+    	if (equilibrium==true)
+    		return previousVal;
+    	else
+    		return next(tokens,maximum,postinglists);
+    }
     @Override
     public Document nextDoc(Query query, int docid) {
-        return null;
+    	query.processQuery();
+    	Vector<String> tokens=query._tokens;
+        int result=-1;
+    	Vector<List<Integer>> postingLists=new Vector<List<Integer>> ();
+    	for (int i=0;i<tokens.size();i++){
+    		postingLists.add(docInvertedMap.get(tokens.get(i)));
+    	}
+        result=next(tokens,docid,postingLists);
+    	if (result<0)
+    	  return null;
+    	else
+    	  return getDoc(docid);
     }
 
     @Override
