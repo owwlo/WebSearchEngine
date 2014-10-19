@@ -1,5 +1,9 @@
 package edu.nyu.cs.cs2580;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  Porter stemmer in Java. The original paper is in
 
@@ -547,11 +551,11 @@ class Stemmer {
     k = i - 1;
     if (k > 1) {
       step1();
-      step2();
-      step3();
-      step4();
-      step5();
-      step6();
+//      step2();
+//      step3();
+//      step4();
+//      step5();
+//      step6();
     }
     i_end = k + 1;
     i = 0;
@@ -565,8 +569,14 @@ class Stemmer {
    */
   public static void main(String[] args) {
     Stemmer s = new Stemmer();
-    for (int i = 0; i < args.length; i++) {
-      String lower = args[i].toLowerCase();
+    List<String> l = new ArrayList<String>();
+    l.add("I");
+    l.add("am");
+    l.add("a");
+    l.add("the");
+    l.add("people");
+    for (int i = 0; i < l.size(); i++) {
+      String lower = l.get(i).toLowerCase();
       s.add(lower.toCharArray(), lower.length());
       s.stem();
       System.out.println(s.toString());
