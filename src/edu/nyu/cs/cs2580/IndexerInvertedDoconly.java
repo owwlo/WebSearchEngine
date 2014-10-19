@@ -8,7 +8,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
@@ -50,6 +56,83 @@ public class IndexerInvertedDoconly extends Indexer {
         return fileList;
     }
 
+    private class InvertIndexBuildingTask implements Runnable {
+        private List<File> files;
+        private int startFileIdx;
+        private int endFileIdx;
+        private Map<String, Queue<Integer>> ivtMap;
+
+        public InvertIndexBuildingTask(List<File> files, int startFileIdx, int endFileIdx,
+                Map<String, Queue<Integer>> ivtMap) {
+            this.files = files;
+            this.startFileIdx = startFileIdx;
+            this.endFileIdx = endFileIdx;
+            this.ivtMap = ivtMap;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("Thread " + Thread.currentThread().getName()
+                    + " processes files from " + startFileIdx
+                    + " to " + endFileIdx);
+            for (int docId = startFileIdx; docId < endFileIdx; docId++) {
+                File file = files.get(docId);
+                Map<String, Integer> ivtMapItem = new HashMap<String, Integer>();
+
+                String htmlStr = null;
+                try {
+                    htmlStr = FileUtils.readFileToString(file);
+                } catch (IOException e) {
+                    continue;
+                }
+                org.jsoup.nodes.Document doc = Jsoup.parse(htmlStr);
+
+                String title = doc.title();
+                String text = doc.text();
+
+                Stemmer s = new Stemmer();
+                Scanner scanner = new Scanner(text);
+                int passageLength = 0;
+                while (scanner.hasNext()) {
+                    String token = scanner.next().toLowerCase();
+                    s.add(token.toCharArray(), token.length());
+                    s.stem();
+
+                    // Build inverted map.
+                    token = s.toString();
+                    if (!ivtMapItem.containsKey(token)) {
+                        ivtMapItem.put(token, 0);
+                    }
+                    ivtMapItem.put(token, ivtMapItem.get(token) + 1);
+                    passageLength++;
+                }
+
+                String url = null;
+                try {
+                    url = file.getCanonicalPath();
+                } catch (IOException e) {
+                    continue;
+                }
+
+                DocumentIndexed di = new DocumentIndexed(docId);
+                di.setTitle(title);
+                di.setUrl(url);
+                di.setLength(passageLength);
+
+                for (String token : ivtMapItem.keySet()) {
+                    if (!ivtMap.containsKey(token)) {
+                        ivtMap.put(token, new ConcurrentLinkedQueue<Integer>());
+                    }
+                    Queue<Integer> recordList = ivtMap.get(token);
+                    recordList.add(docId);
+                    recordList.add(ivtMapItem.get(token));
+                }
+
+                buildDocumentIndex(di);
+            }
+        }
+    }
+
     @Override
     public void constructIndex() throws IOException {
         String corpusFolder = _options._corpusPrefix;
@@ -64,74 +147,71 @@ public class IndexerInvertedDoconly extends Indexer {
 
         initialStore(false);
 
-        Map<String, List<Integer>> ivtMap = new HashMap<String, List<Integer>>();
+        int threadCount = Runtime.getRuntime().availableProcessors();
 
-        System.out.println("Start building index for index. Elapsed: "
+        System.out.println("Start building index with " + threadCount + " threads. Elapsed: "
                 + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
 
-        int docId = 0;
-        for (File file : files) {
-            Map<String, Integer> ivtMapItem = new HashMap<String, Integer>();
-
-            String htmlStr = FileUtils.readFileToString(file);
-            org.jsoup.nodes.Document doc = Jsoup.parse(htmlStr);
-
-            String title = doc.title();
-            String text = doc.text();
-
-            Stemmer s = new Stemmer();
-            Scanner scanner = new Scanner(text);
-            int passageLength = 0;
-            while (scanner.hasNext()) {
-                String token = scanner.next().toLowerCase();
-                s.add(token.toCharArray(), token.length());
-                s.stem();
-
-                // Build inverted map.
-                token = s.toString();
-                if (!ivtMapItem.containsKey(token)) {
-                    ivtMapItem.put(token, 0);
-                }
-                ivtMapItem.put(token, ivtMapItem.get(token) + 1);
-                passageLength++;
+        int filesPerBatch = 2000;
+        for (int batchNum = 0; batchNum < files.size() / filesPerBatch; batchNum++) {
+            int fileIdStart = batchNum * filesPerBatch;
+            int fileIdEnd = (batchNum + 1) * filesPerBatch;
+            if (batchNum == (files.size() / filesPerBatch) - 1) {
+                fileIdEnd = files.size();
             }
 
-            String url = file.getCanonicalPath();
+            System.out.println("Processing files from " + fileIdStart + " to " + fileIdEnd);
 
-            DocumentIndexed di = new DocumentIndexed(docId);
-            di.setTitle(title);
-            di.setUrl(url);
-            di.setLength(passageLength);
+            ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
 
-            for (String token : ivtMapItem.keySet()) {
-                if (!ivtMap.containsKey(token)) {
-                    ivtMap.put(token, new ArrayList<Integer>());
+            Map<String, Queue<Integer>> ivtMap = new ConcurrentHashMap<String, Queue<Integer>>();
+
+            int totalFileCount = fileIdEnd - fileIdStart;
+            int filesPerThread = totalFileCount / threadCount;
+            for (int threadId = 0; threadId < threadCount; threadId++) {
+                int startFileIdx = threadId * filesPerThread + fileIdStart;
+                int endFileIdx = (threadId + 1) * filesPerThread + fileIdStart;
+                if (threadId == threadCount - 1) {
+                    endFileIdx = fileIdEnd;
                 }
-                List<Integer> recordList = ivtMap.get(token);
-                recordList.add(docId);
-                recordList.add(ivtMapItem.get(token));
+                InvertIndexBuildingTask iibt = new InvertIndexBuildingTask(files, startFileIdx,
+                        endFileIdx, ivtMap);
+                threadPool.submit(iibt);
+            }
+            threadPool.shutdown();
+            try {
+                threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
 
-            buildDocumentIndex(di);
+            System.out.println(fileIdEnd + " pages have been processed. Elapsed: "
+                    + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
+            // Write ivtMap into storage.
+            long recordsCommit = 0;
+            System.out.println("Writing Inverted Map to disk. " + fileIdEnd
+                    + " pages have been processed. Elapsed: "
+                    + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
+            for (String token : ivtMap.keySet()) {
+                if (recordsCommit % 200000 == 0 && recordsCommit != 0) {
+                    documentDB.commit();
+                    System.out.println("Records commit size: " + recordsCommit);
+                }
+                List<Integer> ivtRecordList = new ArrayList<Integer>(ivtMap.get(token));
+                if (docInvertedMap.containsKey(token)) {
+                    List<Integer> dbRecordList = docInvertedMap.get(token);
+                    dbRecordList.addAll(ivtRecordList);
+                    docInvertedMap.put(token, dbRecordList);
+                } else {
+                    docInvertedMap.put(token, ivtRecordList);
+                }
 
-            docId++;
+                recordsCommit++;
+            }
+            documentDB.commit();
+            System.out.println("Batch commit done.");
         }
 
-        // Write ivtMap into storage.
-        long recordsCommit = 0;
-        System.out.println("Writing Inverted Map to disk. Elapsed: "
-                + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
-        for (String token : ivtMap.keySet()) {
-            if (recordsCommit % 200000 == 0) {
-                documentDB.commit();
-                System.out.println("Records commit size: " + recordsCommit);
-            }
-
-            List<Integer> ivtRecordList = ivtMap.get(token);
-            docInvertedMap.put(token, ivtRecordList);
-
-            recordsCommit++;
-        }
         documentDB.commit();
         documentDB.compact();
         documentDB.close();
@@ -177,7 +257,7 @@ public class IndexerInvertedDoconly extends Indexer {
         }
     }
 
-    private void buildDocumentIndex(DocumentIndexed di) {
+    synchronized private void buildDocumentIndex(DocumentIndexed di) {
         docMap.put(di._docid, di);
         docUrlMap.put(di.getUrl(), di._docid);
     }
