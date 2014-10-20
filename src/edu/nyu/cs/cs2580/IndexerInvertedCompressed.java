@@ -15,19 +15,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
+import edu.nyu.cs.cs2580.utils.PersistentStoreManager.IvtMapByte;
 
 /**
  * @CS2580: Implement this class for HW2.
  */
 public class IndexerInvertedCompressed extends Indexer {
-    private DB documentDB = null;
-
-    private ArrayList<DB> ivtIndexDBList = new ArrayList<DB>();
-    private ArrayList<Map<String, List<Byte>>> ivtIndexMapList = new ArrayList<Map<String, List<Byte>>>();
+    private List<IvtMapByte> ivtIndexMapList = new ArrayList<IvtMapByte>();
 
     // for compressed posting list
     private Map<String, List<Byte>> compressedPL = new HashMap<String, List<Byte>>();
@@ -38,10 +35,11 @@ public class IndexerInvertedCompressed extends Indexer {
 
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, Integer> docUrlMap = null;
+    private Map<String, Object> infoMap = null;
 
     // Table name for index of documents.
     private static final String DOC_IDX_TBL = "docDB";
-    private static final String DOC_IVT_TBL = "docIvtDB";
+    private static final String DOC_INFO_TBL = "docInfoDB";
     private static final String DOC_URL_TBL = "docUrlDB";
 
     private List<File> getAllFiles(final File folder) {
@@ -62,6 +60,7 @@ public class IndexerInvertedCompressed extends Indexer {
         private int startFileIdx;
         private int endFileIdx;
         private Map<String, List<Byte>> ivtMap;
+        private long termCount = 0;
 
         public InvertIndexBuildingTask(List<File> files, int startFileIdx,
                 int endFileIdx, Map<String, List<Byte>> ivtMap) {
@@ -71,6 +70,10 @@ public class IndexerInvertedCompressed extends Indexer {
             this.ivtMap = ivtMap;
         }
 
+        public long getTermCount() {
+            return termCount;
+        }
+
         @Override
         public void run() {
             System.out.println("Thread " + Thread.currentThread().getName()
@@ -78,7 +81,7 @@ public class IndexerInvertedCompressed extends Indexer {
                     + endFileIdx);
             for (int docId = startFileIdx; docId < endFileIdx; docId++) {
                 File file = files.get(docId);
-                Map<String, ArrayList<Integer>> ivtMapItem = new HashMap<String, ArrayList<Integer>>();
+                Map<String, List<Integer>> ivtMapItem = new HashMap<String, List<Integer>>();
 
                 String htmlStr = null;
                 try {
@@ -93,7 +96,9 @@ public class IndexerInvertedCompressed extends Indexer {
 
                 Stemmer s = new Stemmer();
                 Scanner scanner = new Scanner(text);
+
                 int passageLength = 0;
+
                 while (scanner.hasNext()) {
                     String token = scanner.next().toLowerCase();
                     s.add(token.toCharArray(), token.length());
@@ -104,15 +109,22 @@ public class IndexerInvertedCompressed extends Indexer {
                     // the
                     // map of <token, {occurrence list}> for each document
                     token = s.toString();
+
+                    if (token.length() < 1 || token.length() > 20) {
+                        continue;
+                    }
+
                     if (!ivtMapItem.containsKey(token)) {
                         ArrayList<Integer> occList = new ArrayList<Integer>();
                         ivtMapItem.put(token, occList);
                     }
-                    ArrayList<Integer> occList = ivtMapItem.get(token);
+                    List<Integer> occList = ivtMapItem.get(token);
                     occList.add(passageLength);
                     ivtMapItem.put(token, occList);
                     passageLength++;
                 }
+
+                termCount += passageLength;
 
                 String url = null;
                 try {
@@ -134,8 +146,8 @@ public class IndexerInvertedCompressed extends Indexer {
                     }
                     List<Byte> recordList = ivtMap.get(token);
 
-                    ArrayList<Integer> occList = ivtMapItem.get(token);
-                    ArrayList<Byte> _docId = IndexerInvertedCompressed
+                    List<Integer> occList = ivtMapItem.get(token);
+                    List<Byte> _docId = IndexerInvertedCompressed
                             .compressInt(docId); // get the compressed id
 
                     // sequentially add <docid, occurrence> to the posting list.
@@ -169,9 +181,7 @@ public class IndexerInvertedCompressed extends Indexer {
         // Get all corpus files.
         List<File> files = getAllFiles(new File(corpusFolder));
 
-        int filesPerBatch = 1000;
-
-        initialStore(false, files.size() / filesPerBatch);
+        int filesPerBatch = 1500;
 
         int threadCount = 1;
 
@@ -179,10 +189,18 @@ public class IndexerInvertedCompressed extends Indexer {
                 + " threads. Elapsed: "
                 + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
 
-        for (int batchNum = 0; batchNum < files.size() / filesPerBatch; batchNum++) {
+        infoMap = new HashMap<String, Object>();
+        docMap = new HashMap<Integer, DocumentIndexed>();
+        docUrlMap = new HashMap<String, Integer>();
+
+        infoMap.put("_numDocs", files.size());
+
+        long termCount = 0;
+
+        for (int batchNum = 0; batchNum < files.size() / filesPerBatch + 1; batchNum++) {
             int fileIdStart = batchNum * filesPerBatch;
             int fileIdEnd = (batchNum + 1) * filesPerBatch;
-            if (batchNum == (files.size() / filesPerBatch) - 1) {
+            if (fileIdEnd > files.size()) {
                 fileIdEnd = files.size();
             }
 
@@ -192,7 +210,10 @@ public class IndexerInvertedCompressed extends Indexer {
             ExecutorService threadPool = Executors
                     .newFixedThreadPool(threadCount);
 
+            IvtMapByte ivtMapFile = new IvtMapByte(new File(_options._indexPrefix), "ivt" + batchNum, true);
             Map<String, List<Byte>> ivtMap = new HashMap<String, List<Byte>>();
+
+            List<InvertIndexBuildingTask> taskList = new ArrayList<InvertIndexBuildingTask>();
 
             int totalFileCount = fileIdEnd - fileIdStart;
             int filesPerThread = totalFileCount / threadCount;
@@ -205,12 +226,18 @@ public class IndexerInvertedCompressed extends Indexer {
                 InvertIndexBuildingTask iibt = new InvertIndexBuildingTask(
                         files, startFileIdx, endFileIdx, ivtMap);
                 threadPool.submit(iibt);
+                taskList.add(iibt);
             }
             threadPool.shutdown();
             try {
                 threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+
+            // Combine all posting lists for N threads.
+            for (InvertIndexBuildingTask iibt : taskList) {
+                termCount += iibt.getTermCount();
             }
 
             System.out.println(fileIdEnd
@@ -224,31 +251,16 @@ public class IndexerInvertedCompressed extends Indexer {
                     + " pages have been processed. Elapsed: "
                     + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
 
-            DB db = ivtIndexDBList.get(batchNum);
-            Map<String, List<Byte>> ivtMapPerDB = ivtIndexMapList.get(batchNum);
+            ivtMapFile.putAll(ivtMap);
+            ivtMapFile.close();
 
-            ivtMapPerDB.putAll(ivtMap);
-            //
-            // for (String token : ivtMap.keySet()) {
-            // if (recordsCommit % 80000 == 0 && recordsCommit != 0) {
-            // db.commit();
-            // System.out.println("Records commit size: " + recordsCommit);
-            // }
-            // //List<Integer> ivtRecordList = new
-            // Vector<Integer>(ivtMap.get(token));
-            //
-            // recordsCommit++;
-            // }
-            db.commit();
-            // db.compact();
-            // db.close();
             System.out.println("Batch commit done. Elapsed: "
                     + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
         }
 
-        documentDB.commit();
-        documentDB.compact();
-        documentDB.close();
+        infoMap.put("_totalTermFrequency", termCount);
+
+        storeVariables();
 
         long end_t = System.currentTimeMillis();
 
@@ -256,66 +268,23 @@ public class IndexerInvertedCompressed extends Indexer {
                 / 1000.0 + "s");
     }
 
-    private void initialStore(boolean readOnly) {
-        initialStore(readOnly, -1);
+    private void storeVariables() {
+        File docMapFile = new File(this._options._indexPrefix, DOC_IDX_TBL);
+        File docUrlFile = new File(this._options._indexPrefix, DOC_URL_TBL);
+        File docInfoFile = new File(this._options._indexPrefix, DOC_INFO_TBL);
+        PersistentStoreManager.writeObjectToFile(docMapFile, docMap);
+        PersistentStoreManager.writeObjectToFile(docUrlFile, docUrlMap);
+        PersistentStoreManager.writeObjectToFile(docInfoFile, infoMap);
     }
 
-    private void initialStore(boolean readOnly, int ivtDBCount) {
-        // Initialize Database
-        File f = new File(_options._indexPrefix, "docIdx");
-
-        if (readOnly) {
-            documentDB = DBMaker.newFileDB(f).mmapFileEnable().readOnly()
-                    .transactionDisable().make();
-        } else {
-            documentDB = DBMaker.newFileDB(f).mmapFileEnable()
-                    .transactionDisable().asyncWriteEnable().make();
-        }
-
-        if (ivtDBCount > 0) {
-            for (int i = 0; i < ivtDBCount; i++) {
-                File ivtDbFile = new File(_options._indexPrefix, "ivtDb" + i);
-                DB db = null;
-                if (readOnly) {
-                    db = DBMaker.newFileDB(ivtDbFile).mmapFileEnable()
-                            .readOnly().commitFileSyncDisable()
-                            .transactionDisable().make();
-                } else {
-                    db = DBMaker.newFileDB(ivtDbFile).mmapFileEnable()
-                            .transactionDisable().compressionEnable()
-
-                            .commitFileSyncDisable().asyncWriteEnable().make();
-                }
-                ivtIndexDBList.add(db);
-            }
-        } else {
-            for (int i = 0; i < 100; i++) {
-                File ivtDbFile = new File(_options._indexPrefix, "ivtDb" + i);
-                if (!ivtDbFile.exists()) {
-                    break;
-                }
-                DB db = null;
-                if (readOnly) {
-                    db = DBMaker.newFileDB(ivtDbFile).mmapFileEnable()
-                            .readOnly().commitFileSyncDisable()
-                            .transactionDisable().cacheSize(524288).make();
-                } else {
-                    db = DBMaker.newFileDB(ivtDbFile).mmapFileEnable()
-                            .commitFileSyncDisable().transactionDisable()
-
-                            .asyncWriteEnable().cacheSize(524288).make();
-                }
-                ivtIndexDBList.add(db);
-            }
-        }
-        for (DB d : ivtIndexDBList) {
-            Map<String, List<Byte>> hm = d.createHashMap(DOC_IVT_TBL)
-                    .makeOrGet();
-            ivtIndexMapList.add(hm);
-        }
-
-        docMap = documentDB.createHashMap(DOC_IDX_TBL).makeOrGet();
-        docUrlMap = documentDB.createHashMap(DOC_URL_TBL).makeOrGet();
+    private void readVariables() {
+        File docMapFile = new File(this._options._indexPrefix, DOC_IDX_TBL);
+        File docUrlFile = new File(this._options._indexPrefix, DOC_URL_TBL);
+        File docInfoFile = new File(this._options._indexPrefix, DOC_INFO_TBL);
+        docMap = (Map<Integer, DocumentIndexed>) PersistentStoreManager
+                .readObjectFromFile(docMapFile);
+        docUrlMap = (Map<String, Integer>) PersistentStoreManager.readObjectFromFile(docUrlFile);
+        infoMap = (Map<String, Object>) PersistentStoreManager.readObjectFromFile(docInfoFile);
     }
 
     private void cleanUpDirectory() {
@@ -333,7 +302,14 @@ public class IndexerInvertedCompressed extends Indexer {
 
     @Override
     public void loadIndex() throws IOException, ClassNotFoundException {
-        initialStore(true);
+        for (int i = 0; i < 100; i++) {
+            File file = new File(_options._indexPrefix, "ivt" + i);
+            if (!file.exists()) {
+                break;
+            }
+            ivtIndexMapList.add(new IvtMapByte(new File(_options._indexPrefix), "ivt" + i, false));
+        }
+        readVariables();
     }
 
     @Override

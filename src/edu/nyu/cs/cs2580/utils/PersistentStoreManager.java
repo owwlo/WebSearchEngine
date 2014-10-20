@@ -82,7 +82,8 @@ public class PersistentStoreManager {
 
         private void createNewMap(File file, String mapName) {
             try {
-                postListOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file, false)));
+                postListOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(
+                        file, false)));
                 postListIn = new RandomAccessFile(file, "r");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -170,6 +171,165 @@ public class PersistentStoreManager {
 
         @Override
         public Collection<List<Integer>> values() {
+            return null;
+        }
+
+        public void close() {
+            try {
+                if (isNew) {
+                    storeIndex();
+                    postListOut.flush();
+                    postListOut.close();
+                } else {
+                    postListIn.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void storeIndex() {
+            try {
+                FileOutputStream fout = new FileOutputStream(idxFile);
+                ObjectOutputStream oos = new ObjectOutputStream(fout);
+                oos.writeObject(ivtOffset);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            super.finalize();
+            this.close();
+        }
+    }
+
+    public static class IvtMapByte implements Map<String, List<Byte>> {
+        private Map<String, Integer> ivtOffset;
+        private DataOutputStream postListOut;
+        private RandomAccessFile postListIn;
+        private File idxFile;
+        private boolean isNew;
+
+        public IvtMapByte(File dir, String mapName, boolean isNew) {
+            this.isNew = isNew;
+            idxFile = new File(dir, mapName + ".idx");
+            File file = new File(dir, mapName);
+            if (isNew) {
+                createNewMap(file, mapName);
+            } else {
+                loadMap(file, mapName);
+            }
+        }
+
+        private void loadMap(File file, String mapName) {
+            try {
+                postListIn = new RandomAccessFile(file, "r");
+
+                FileInputStream streamIn = new FileInputStream(idxFile);
+                ObjectInputStream objectinputstream = new ObjectInputStream(streamIn);
+                ivtOffset = (Map<String, Integer>) objectinputstream.readObject();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void createNewMap(File file, String mapName) {
+            try {
+                postListOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(
+                        file, false)));
+                postListIn = new RandomAccessFile(file, "r");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            ivtOffset = new HashMap<String, Integer>();
+        }
+
+        @Override
+        public void clear() {
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return ivtOffset.containsKey(key);
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return false;
+        }
+
+        @Override
+        public Set<java.util.Map.Entry<String, List<Byte>>> entrySet() {
+            return null;
+        }
+
+        @Override
+        public List<Byte> get(Object key) {
+            int offset = ivtOffset.get(key);
+            List<Byte> result = new ArrayList<Byte>();
+            try {
+                postListIn.seek(offset);
+                int size = postListIn.readInt();
+                for (int i = 0; i < size; i++) {
+                    result.add(postListIn.readByte());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return ivtOffset.isEmpty();
+        }
+
+        @Override
+        public Set<String> keySet() {
+            return ivtOffset.keySet();
+        }
+
+        @Override
+        synchronized public List<Byte> put(String key, List<Byte> value) {
+            int offset = postListOut.size();
+            int size = value.size();
+            ivtOffset.put(key, offset);
+            try {
+                postListOut.writeInt(size);
+                for (byte b : value) {
+                    postListOut.writeByte(b);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return value;
+        }
+
+        @Override
+        public void putAll(Map<? extends String, ? extends List<Byte>> m) {
+            for (String key : m.keySet()) {
+                this.put(key, m.get(key));
+            }
+        }
+
+        @Override
+        public List<Byte> remove(Object key) {
+            return null;
+        }
+
+        @Override
+        public int size() {
+            return ivtOffset.size();
+        }
+
+        @Override
+        public Collection<List<Byte>> values() {
             return null;
         }
 
