@@ -84,11 +84,14 @@ public class RankerFavorite extends Ranker {
 	 // }
 	 // query.processQuery();
       double logScore = 0.0;
-      for (int i = 0; i < query._tokens.size(); i++) {
-    	  
-          String currentWord = query._tokens.get(i);
-          logScore += calculateProbability(currentWord, d);
-      }
+		for (int i = 0; i < query._tokens.size(); i++) {
+			String[] tokenArray = query._tokens.get(i).split(" ");
+			for (int j = 0; j < tokenArray.length; j++) {
+
+				String currentWord = query._tokens.get(j);
+				logScore += calculateProbability(currentWord, d);
+			}
+		}
 
       // System.out.println("log score is:"+logScore);
     //  return new ScoredDocument(d,logScore);
