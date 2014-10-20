@@ -56,7 +56,7 @@ public class RankerFavorite extends Ranker {
       /// System.out.println("sind is:"+sind);
       // probability within corpus
       double termF = (double) this._indexer.corpusTermFrequency(currentWord);
-      double  totalF=1.0;
+      double  totalF=this._indexer._totalTermFrequency;
      // System.out.println("termF: "+termF);
      // double totalF = (double) this._indexer.totalTermFrequency();
      // System.out.println("termF is: "+termF+"term total is: "+totalF);

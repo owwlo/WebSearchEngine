@@ -12,7 +12,6 @@ import java.util.Queue;
 import java.util.Scanner;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -33,10 +32,13 @@ public class IndexerInvertedDoconly extends Indexer {
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, List<Integer>> docInvertedMap = null;
     private Map<String, Integer> docUrlMap = null;
+    private Map<String, Object> infoMap = null;
+
     // Table name for index of documents.
     private static final String DOC_IDX_TBL = "docDB";
     private static final String DOC_IVT_TBL = "docIvtDB";
     private static final String DOC_URL_TBL = "docUrlDB";
+    private static final String DOC_INFO_TBL = "docInfoDB";
 
     public IndexerInvertedDoconly(Options options) {
         super(options);
@@ -61,6 +63,7 @@ public class IndexerInvertedDoconly extends Indexer {
         private int startFileIdx;
         private int endFileIdx;
         private Map<String, List<Integer>> ivtMap = new HashMap<String, List<Integer>>();
+        private long termCount = 0;
 
         public InvertIndexBuildingTask(List<File> files, int startFileIdx, int endFileIdx) {
             this.files = files;
@@ -70,6 +73,10 @@ public class IndexerInvertedDoconly extends Indexer {
 
         public Map<String, List<Integer>> getIvtMapForThread() {
             return ivtMap;
+        }
+        
+        public long getTermCount() {
+            return termCount;
         }
 
         @Override
@@ -108,6 +115,8 @@ public class IndexerInvertedDoconly extends Indexer {
                     ivtMapItem.put(token, ivtMapItem.get(token) + 1);
                     passageLength++;
                 }
+                
+                termCount += passageLength;
 
                 String url = null;
                 try {
@@ -146,13 +155,17 @@ public class IndexerInvertedDoconly extends Indexer {
 
         // Get all corpus files.
         List<File> files = getAllFiles(new File(corpusFolder));
-
+        
         initialStore(false);
+        
+        infoMap.put("_numDocs", files.size());
 
         int threadCount = 1;
 
         System.out.println("Start building index with " + threadCount + " threads. Elapsed: "
                 + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
+        
+        long termCount = 0;
 
         int filesPerBatch = 1000;
         for (int batchNum = 0; batchNum < files.size() / filesPerBatch; batchNum++) {
@@ -199,6 +212,7 @@ public class IndexerInvertedDoconly extends Indexer {
                     Queue<Integer> recordList = ivtMap.get(token);
                     recordList.addAll(ivtMapPerThread.get(token));
                 }
+                termCount += iibt.getTermCount();
             }
 
             // Write ivtMap into storage.
@@ -225,6 +239,8 @@ public class IndexerInvertedDoconly extends Indexer {
             documentDB.commit();
             System.out.println("Batch commit done.");
         }
+        
+        infoMap.put("_totalTermFrequency", termCount);
 
         documentDB.commit();
         documentDB.compact();
@@ -261,6 +277,8 @@ public class IndexerInvertedDoconly extends Indexer {
                 .makeOrGet();
         docUrlMap = documentDB.createHashMap(DOC_URL_TBL)
                 .makeOrGet();
+        infoMap = documentDB.createHashMap(DOC_INFO_TBL)
+                .makeOrGet();
     }
 
     private void cleanUpDirectory() {
@@ -279,6 +297,8 @@ public class IndexerInvertedDoconly extends Indexer {
     @Override
     public void loadIndex() throws IOException, ClassNotFoundException {
         initialStore(true);
+        _numDocs = (Integer) infoMap.get("_numDocs");
+        _totalTermFrequency = (Long) infoMap.get("_totalTermFrequency");
     }
 
     @Override
@@ -289,75 +309,72 @@ public class IndexerInvertedDoconly extends Indexer {
     /**
      * In HW2, you should be using {@link DocumentIndexed}
      */
-    
-    
-    
-   private static int nextForOne(int docId,List<Integer> postinglists){
-    	if (postinglists==null)
-    		return -1;
-        if (postinglists.size()<1||postinglists.get(postinglists.size()-2)<=docId)	
-    	  return -1;
-    	if (postinglists.get(0)>docId)
-    		return postinglists.get(0);
-    	int start=0;
-    	int end=postinglists.size()/2-1;
-    	while (end-start>1){
-    		int mid=(start+end)/2;
-    		if (postinglists.get(mid*2)<=docId)
-    			start=mid;
-    		else
-    			end=mid;
-    	}
-    	return postinglists.get(2*end);
-    }     
-    
-    
-    
-    private static int next(int docId,Vector<List<Integer>> postinglists){
-    	int[] docIds=new int[postinglists.size()];
-    	//System.out.println("current id is: "+docId);
-    	int previousVal=-1;
-        boolean equilibrium=true;
-        int maximum=Integer.MIN_VALUE;
-    	for (int i=0;i<postinglists.size();i++){
-    		int currentId=nextForOne(docId,postinglists.get(i));
-    		if (currentId<0)
-    			return -1;
-    		if (previousVal<0){
-    			previousVal=currentId;
-    			maximum=currentId;
-    		}
-    		else {
-    			if (previousVal!=currentId){
-    				equilibrium=false;
-    				maximum=Math.max(maximum, currentId);
-    			}
-    		}   		
-    	}
-    	if (equilibrium==true)
-    		return previousVal;
-    	else
-    		return next(maximum-1,postinglists);
+
+    private static int nextForOne(int docId, List<Integer> postinglists) {
+        if (postinglists == null)
+            return -1;
+        if (postinglists.size() < 1 || postinglists.get(postinglists.size() - 2) <= docId)
+            return -1;
+        if (postinglists.get(0) > docId)
+            return postinglists.get(0);
+        int start = 0;
+        int end = postinglists.size() / 2 - 1;
+        while (end - start > 1) {
+            int mid = (start + end) / 2;
+            if (postinglists.get(mid * 2) <= docId)
+                start = mid;
+            else
+                end = mid;
+        }
+        return postinglists.get(2 * end);
     }
+
+    private static int next(int docId, Vector<List<Integer>> postinglists) {
+        int[] docIds = new int[postinglists.size()];
+        // System.out.println("current id is: "+docId);
+        int previousVal = -1;
+        boolean equilibrium = true;
+        int maximum = Integer.MIN_VALUE;
+        for (int i = 0; i < postinglists.size(); i++) {
+            int currentId = nextForOne(docId, postinglists.get(i));
+            if (currentId < 0)
+                return -1;
+            if (previousVal < 0) {
+                previousVal = currentId;
+                maximum = currentId;
+            }
+            else {
+                if (previousVal != currentId) {
+                    equilibrium = false;
+                    maximum = Math.max(maximum, currentId);
+                }
+            }
+        }
+        if (equilibrium == true)
+            return previousVal;
+        else
+            return next(maximum - 1, postinglists);
+    }
+
     @Override
     public Document nextDoc(Query query, int docid) {
-    	//query.processQuery();
-    	Vector<String> tokens=query._tokens;
-        int result=-1;
-    	Vector<List<Integer>> postingLists=new Vector<List<Integer>> ();
-    	for (int i=0;i<tokens.size();i++){
+        // query.processQuery();
+        Vector<String> tokens = query._tokens;
+        int result = -1;
+        Vector<List<Integer>> postingLists = new Vector<List<Integer>>();
+        for (int i = 0; i < tokens.size(); i++) {
             Stemmer s = new Stemmer();
             s.add(tokens.get(i).toLowerCase().toCharArray(), tokens.get(i).length());
             s.stem();
-            //System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
-    		postingLists.add(docInvertedMap.get(s.toString()));
-    	}
-        result=next(docid,postingLists);
-        //System.out.println("the result is:"+result);
-    	if (result<0)
-    	  return null;
-    	else
-    	  return getDoc(result);
+            // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
+            postingLists.add(docInvertedMap.get(s.toString()));
+        }
+        result = next(docid, postingLists);
+        // System.out.println("the result is:"+result);
+        if (result < 0)
+            return null;
+        else
+            return getDoc(result);
     }
 
     @Override
@@ -376,18 +393,19 @@ public class IndexerInvertedDoconly extends Indexer {
 
         return l.size() / 2;
     }
+
     @Override
     public int corpusTermFrequency(String term) {
         // Stem given term.
         Stemmer s = new Stemmer();
         s.add(term.toLowerCase().toCharArray(), term.length());
         s.stem();
-        //System.out.println("term is: "+ term+ "stemmer is: "+s.toString());
+        // System.out.println("term is: "+ term+ "stemmer is: "+s.toString());
         if (!docInvertedMap.containsKey(s.toString())) {
-        	//System.out.println("it is not contained...");
+            // System.out.println("it is not contained...");
             return 0;
         }
-        //System.out.println("OMG....");
+        // System.out.println("OMG....");
         // Get posting list from index.
         List<Integer> l = docInvertedMap.get(s.toString());
 
@@ -399,45 +417,40 @@ public class IndexerInvertedDoconly extends Indexer {
         return result;
     }
 
-    private static int bsInner(final int start, final int end, final int docid, final List<Integer> list) {
-        /*if (end - start <= 1) {
-            return -1;
+    private static int bsInner(final int start, final int end, final int docid,
+            final List<Integer> list) {
+        /*
+         * if (end - start <= 1) { return -1; } int chk = start / 2 + end / 2;
+         * if (chk % 2 == 1) { return -1; } if (list.get(chk) > docid) { return
+         * bsInner(start, chk, docid, list); } else if (list.get(chk) < docid) {
+         * return bsInner(chk, end, docid, list); }
+         */
+        int Start = start;
+        int End = end;
+        while (Start <= End) {
+            int mid = (Start + End) / 2;
+            if (docid == list.get(2 * mid))
+                return (2 * mid);
+            if (docid < list.get(2 * mid))
+                End = mid - 1;
+            else
+                Start = mid + 1;
+            // System.out.println("Start is: "+Start+"End is :"+End);
         }
-        int chk = start / 2 + end / 2;
-        if (chk % 2 == 1) {
-            return -1;
-        }
-        if (list.get(chk) > docid) {
-            return bsInner(start, chk, docid, list);
-        } else if (list.get(chk) < docid) {
-            return bsInner(chk, end, docid, list);
-        }*/
-    	int Start=start;
-    	int End=end;
-    	while (Start<=End){
-    		int mid=(Start+End)/2;
-    		if (docid==list.get(2*mid))
-    			return (2*mid);
-    		if (docid<list.get(2*mid))
-    			End=mid-1;
-    		else
-    			Start=mid+1;
-    		//System.out.println("Start is: "+Start+"End is :"+End);
-    	}
         return -1;
     }
 
     private int binarySearchPostList(final int docId, final List<Integer> list) {
-       // return bsInner(0, list.size() - 1, docId, list);
-    	//Modification:
-    	return bsInner(0,list.size()/2-1,docId,list);
+        // return bsInner(0, list.size() - 1, docId, list);
+        // Modification:
+        return bsInner(0, list.size() / 2 - 1, docId, list);
     }
 
     @Override
     public int documentTermFrequency(String term, String url) {
         // Get docid for specific url.
         int docid = docUrlMap.get(url);
-        
+
         // Stem given term.
         Stemmer s = new Stemmer();
         s.add(term.toLowerCase().toCharArray(), term.length());
@@ -451,46 +464,41 @@ public class IndexerInvertedDoconly extends Indexer {
 
         // Use binary search looking for docid within given posting list.
         int pos = binarySearchPostList(docid, l);
-      /*  if (docid==637){
-        	System.out.println("i am at 637");
-        	System.out.println("position is:"+l.get(pos+1));
-        	for (int i=0;i<l.size();i++)
-        		System.out.printf(" "+l.get(i)+" ");
-        }*/
+        /*
+         * if (docid==637){ System.out.println("i am at 637");
+         * System.out.println("position is:"+l.get(pos+1)); for (int
+         * i=0;i<l.size();i++) System.out.printf(" "+l.get(i)+" "); }
+         */
         if (pos != -1) {
             // Return term frequency for given doc and term
-       // 	System.out.println("current num is: "+l.get(pos+1));
+            // System.out.println("current num is: "+l.get(pos+1));
             return l.get(pos + 1);
         } else {
             return 0;
         }
     }
-    public static void main(String[] args){
-    	/*int[] first={1,1,2,1,5,1,7,1,8,1};
-    	int[] second={3,1,4,1,8,1};
-    	int[] third={8,2,9,3};
-    	ArrayList<Integer> firstA=new ArrayList<Integer> ();
-    	ArrayList<Integer> secondA=new ArrayList<Integer> ();
-    	ArrayList<Integer> thirdA=new ArrayList<Integer> ();
-    	for (int i=0;i<first.length;i++)
-    		firstA.add(first[i]);
-    	for (int i=0;i<second.length;i++)
-    		secondA.add(second[i]);
-    	for (int i=0;i<third.length;i++)
-    		thirdA.add(third[i]);
-    	Vector<List<Integer>> posting=new Vector<List<Integer>> ();
-    	posting.add(firstA);
-    	posting.add(secondA);
-    	posting.add(thirdA);
-    	int k=next(-1,posting);
-    	//int k=nextForOne(7,firstA);
-    	System.out.println(k);*/
-    	int docId=8;
-    	int[] first={1,1,2,1,5,4,7,1,8,1};
-    	ArrayList<Integer> firstA=new ArrayList<Integer> ();
-    	for (int i=0;i<first.length;i++)
-    		firstA.add(first[i]);
-    	System.out.println("result is: "+bsInner(0,firstA.size()/2-1,docId, firstA));
+
+    public static void main(String[] args) {
+        /*
+         * int[] first={1,1,2,1,5,1,7,1,8,1}; int[] second={3,1,4,1,8,1}; int[]
+         * third={8,2,9,3}; ArrayList<Integer> firstA=new ArrayList<Integer> ();
+         * ArrayList<Integer> secondA=new ArrayList<Integer> ();
+         * ArrayList<Integer> thirdA=new ArrayList<Integer> (); for (int
+         * i=0;i<first.length;i++) firstA.add(first[i]); for (int
+         * i=0;i<second.length;i++) secondA.add(second[i]); for (int
+         * i=0;i<third.length;i++) thirdA.add(third[i]); Vector<List<Integer>>
+         * posting=new Vector<List<Integer>> (); posting.add(firstA);
+         * posting.add(secondA); posting.add(thirdA); int k=next(-1,posting);
+         * //int k=nextForOne(7,firstA); System.out.println(k);
+         */
+        int docId = 8;
+        int[] first = {
+                1, 1, 2, 1, 5, 4, 7, 1, 8, 1
+        };
+        ArrayList<Integer> firstA = new ArrayList<Integer>();
+        for (int i = 0; i < first.length; i++)
+            firstA.add(first[i]);
+        System.out.println("result is: " + bsInner(0, firstA.size() / 2 - 1, docId, firstA));
     }
-    
+
 }
