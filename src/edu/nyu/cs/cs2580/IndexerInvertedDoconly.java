@@ -60,14 +60,16 @@ public class IndexerInvertedDoconly extends Indexer {
         private List<File> files;
         private int startFileIdx;
         private int endFileIdx;
-        private Map<String, Queue<Integer>> ivtMap;
+        private Map<String, List<Integer>> ivtMap = new HashMap<String, List<Integer>>();
 
-        public InvertIndexBuildingTask(List<File> files, int startFileIdx, int endFileIdx,
-                Map<String, Queue<Integer>> ivtMap) {
+        public InvertIndexBuildingTask(List<File> files, int startFileIdx, int endFileIdx) {
             this.files = files;
             this.startFileIdx = startFileIdx;
             this.endFileIdx = endFileIdx;
-            this.ivtMap = ivtMap;
+        }
+
+        public Map<String, List<Integer>> getIvtMapForThread() {
+            return ivtMap;
         }
 
         @Override
@@ -121,9 +123,9 @@ public class IndexerInvertedDoconly extends Indexer {
 
                 for (String token : ivtMapItem.keySet()) {
                     if (!ivtMap.containsKey(token)) {
-                        ivtMap.put(token, new ConcurrentLinkedQueue<Integer>());
+                        ivtMap.put(token, new LinkedList<Integer>());
                     }
-                    Queue<Integer> recordList = ivtMap.get(token);
+                    List<Integer> recordList = ivtMap.get(token);
                     recordList.add(docId);
                     recordList.add(ivtMapItem.get(token));
                 }
@@ -152,7 +154,7 @@ public class IndexerInvertedDoconly extends Indexer {
         System.out.println("Start building index with " + threadCount + " threads. Elapsed: "
                 + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
 
-        int filesPerBatch = 2000;
+        int filesPerBatch = 1000;
         for (int batchNum = 0; batchNum < files.size() / filesPerBatch; batchNum++) {
             int fileIdStart = batchNum * filesPerBatch;
             int fileIdEnd = (batchNum + 1) * filesPerBatch;
@@ -165,6 +167,7 @@ public class IndexerInvertedDoconly extends Indexer {
             ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
 
             Map<String, Queue<Integer>> ivtMap = new ConcurrentHashMap<String, Queue<Integer>>();
+            List<InvertIndexBuildingTask> taskList = new ArrayList<IndexerInvertedDoconly.InvertIndexBuildingTask>();
 
             int totalFileCount = fileIdEnd - fileIdStart;
             int filesPerThread = totalFileCount / threadCount;
@@ -175,8 +178,9 @@ public class IndexerInvertedDoconly extends Indexer {
                     endFileIdx = fileIdEnd;
                 }
                 InvertIndexBuildingTask iibt = new InvertIndexBuildingTask(files, startFileIdx,
-                        endFileIdx, ivtMap);
+                        endFileIdx);
                 threadPool.submit(iibt);
+                taskList.add(iibt);
             }
             threadPool.shutdown();
             try {
@@ -185,8 +189,18 @@ public class IndexerInvertedDoconly extends Indexer {
                 e.printStackTrace();
             }
 
-            System.out.println(fileIdEnd + " pages have been processed. Elapsed: "
-                    + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
+            // Combine all posting lists for N threads.
+            for (InvertIndexBuildingTask iibt : taskList) {
+                Map<String, List<Integer>> ivtMapPerThread = iibt.getIvtMapForThread();
+                for (String token : ivtMapPerThread.keySet()) {
+                    if (!ivtMap.containsKey(token)) {
+                        ivtMap.put(token, new LinkedList<Integer>());
+                    }
+                    Queue<Integer> recordList = ivtMap.get(token);
+                    recordList.addAll(ivtMapPerThread.get(token));
+                }
+            }
+
             // Write ivtMap into storage.
             long recordsCommit = 0;
             System.out.println("Writing Inverted Map to disk. " + fileIdEnd

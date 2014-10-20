@@ -155,7 +155,7 @@ public class IndexerInvertedOccurrence extends Indexer {
 
     initialStore(false);
 
-    int threadCount = Runtime.getRuntime().availableProcessors();
+    int threadCount = 1;
 
     System.out.println("Start building index with " + threadCount + " threads. Elapsed: "
             + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
@@ -205,7 +205,7 @@ public class IndexerInvertedOccurrence extends Indexer {
                 documentDB.commit();
                 System.out.println("Records commit size: " + recordsCommit);
             }
-            List<Integer> ivtRecordList = new ArrayList<Integer>(ivtMap.get(token));
+            List<Integer> ivtRecordList = new LinkedList<Integer>(ivtMap.get(token));
             if (docInvertedMap.containsKey(token)) {
                 List<Integer> dbRecordList = docInvertedMap.get(token);
                 dbRecordList.addAll(ivtRecordList);
@@ -239,14 +239,12 @@ public class IndexerInvertedOccurrence extends Indexer {
                   .mmapFileEnable()
                   .readOnly()
                   .transactionDisable()
-                  .compressionEnable()
                   .make();
       } else {
           documentDB = DBMaker.newFileDB(f)
                   .mmapFileEnable()
                   .transactionDisable()
                   .asyncWriteEnable()
-                  .compressionEnable()
                   .make();
       }
 
