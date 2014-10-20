@@ -523,6 +523,32 @@ public class IndexerInvertedCompressed extends Indexer {
         }
         return res;
     }
+    
+    // provide array of bytes, return array of ints
+    static public ArrayList<Integer> decompressArray(ArrayList<Byte> codes){
+    	ArrayList<Integer> decode = new ArrayList<Integer>();
+    	
+    	int i = 0;
+    	while (i < codes.size()){
+    		// get the docid or occurrence
+    		ArrayList<Byte> item = new ArrayList<Byte>();
+    		while ((codes.get(i) & 0x80)==(byte)0){
+    			item.add(codes.get(i));
+    			i++;
+    			if (i >= codes.size()){
+    				System.out.println("Error: illegal code!");
+    				return null;
+    			}
+    		}
+    		item.add(codes.get(i));
+    		i++;
+    		
+    		// decompress the docid
+    		decode.add(decompressBytes(item));
+    	}
+    	
+    	return decode;
+    }
 
     // provide docid/occurrence to bytes of codes
     static public ArrayList<Byte> compressInt(int num) {
@@ -549,8 +575,16 @@ public class IndexerInvertedCompressed extends Indexer {
     }
 
     public static void main(String args[]) {
-        ArrayList<Byte> a = compressInt(1000234567);
-        int b = decompressBytes(a);
-        System.out.println(a + "->" + b);
+    	ArrayList<Byte> codes = new ArrayList<Byte>();
+        ArrayList<Byte> a1 = compressInt(1000234567);
+        codes.addAll(a1);
+        ArrayList<Byte> a2 = compressInt(1000);
+        codes.addAll(a2);
+        ArrayList<Byte> a3 = compressInt(67);
+        codes.addAll(a3);
+        ArrayList<Byte> a4 = compressInt(10002345);
+        codes.addAll(a4);
+        ArrayList<Integer> b = decompressArray(codes);
+        System.out.println(codes + "->" + b);
     }
 }
