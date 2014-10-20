@@ -74,7 +74,7 @@ public class IndexerInvertedDoconly extends Indexer {
         public Map<String, List<Integer>> getIvtMapForThread() {
             return ivtMap;
         }
-
+        
         public long getTermCount() {
             return termCount;
         }
@@ -115,7 +115,7 @@ public class IndexerInvertedDoconly extends Indexer {
                     ivtMapItem.put(token, ivtMapItem.get(token) + 1);
                     passageLength++;
                 }
-
+                
                 termCount += passageLength;
 
                 String url = null;
@@ -155,16 +155,16 @@ public class IndexerInvertedDoconly extends Indexer {
 
         // Get all corpus files.
         List<File> files = getAllFiles(new File(corpusFolder));
-
+        
         initialStore(false);
-
+        
         infoMap.put("_numDocs", files.size());
 
         int threadCount = 1;
 
         System.out.println("Start building index with " + threadCount + " threads. Elapsed: "
                 + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
-
+        
         long termCount = 0;
 
         int filesPerBatch = 1000;
@@ -239,8 +239,8 @@ public class IndexerInvertedDoconly extends Indexer {
             documentDB.commit();
             System.out.println("Batch commit done.");
         }
-
-        System.out.println(termCount);
+        
+        infoMap.put("_totalTermFrequency", termCount);
 
         documentDB.commit();
         documentDB.compact();
