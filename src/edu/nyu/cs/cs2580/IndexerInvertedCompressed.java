@@ -561,7 +561,12 @@ public class IndexerInvertedCompressed extends Indexer {
             byte currByte = list.get(i);
             while ((currByte & 0x80) == (byte) 0) {
                 code.add(currByte);
-                currByte = list.get(i++);
+                i++;
+                if (i >= list.size()){
+                	return -1;
+                }else{
+                	currByte = list.get(i);
+                }
             }
             code.add(currByte);
             i++;
@@ -570,8 +575,14 @@ public class IndexerInvertedCompressed extends Indexer {
                 return pos;
             }
 
+            if (i >= list.size()){
+            	return -1;
+            }
             while ((list.get(i) & 0x80) == (byte) 0) {
                 i++;
+                if (i >= list.size()){
+                	return -1;
+                }
             }
             i++;
         }
