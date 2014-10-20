@@ -71,6 +71,7 @@ public class PersistentStoreManager {
                 FileInputStream streamIn = new FileInputStream(idxFile);
                 ObjectInputStream objectinputstream = new ObjectInputStream(streamIn);
                 ivtOffset = (Map<String, Integer>) objectinputstream.readObject();
+                streamIn.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {

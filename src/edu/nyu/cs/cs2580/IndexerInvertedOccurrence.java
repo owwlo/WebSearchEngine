@@ -420,13 +420,14 @@ public class IndexerInvertedOccurrence extends Indexer {
         int result = -1;
         Vector<Vector<List<Integer>>> postingLists = new Vector<Vector<List<Integer>>>();
         for (int i = 0; i < tokens.size(); i++) {
-            Stemmer s = new Stemmer();
-            s.add(tokens.get(i).toLowerCase().toCharArray(), tokens.get(i).length());
-            s.stem();
             Vector<List<Integer>> container = new Vector<List<Integer>>();
-            String[] consecutiveWords = s.toString().split(" ");
-            for (int j = 0; j < consecutiveWords.length; j++)
-                container.add(ivtGet(consecutiveWords[j]));
+            String[] consecutiveWords = tokens.get(i).split(" ");
+            for (int j = 0; j < consecutiveWords.length; j++) {
+                Stemmer s = new Stemmer();
+                s.add(consecutiveWords[j].toLowerCase().toCharArray(), consecutiveWords[j].length());
+                s.stem();
+                container.add(ivtGet(s.toString()));
+            }
             // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
             postingLists.add(container);
         }

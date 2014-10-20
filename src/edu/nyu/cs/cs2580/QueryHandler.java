@@ -201,7 +201,7 @@ public class QueryHandler implements HttpHandler {
             }
 
             // Processing the query.
-            Query processedQuery = new Query(cgiArgs._query);
+            Query processedQuery = new QueryPhrase(cgiArgs._query);
             processedQuery.processQuery();
 
             // Ranking.
