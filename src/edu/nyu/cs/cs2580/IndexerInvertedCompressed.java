@@ -210,7 +210,8 @@ public class IndexerInvertedCompressed extends Indexer {
             ExecutorService threadPool = Executors
                     .newFixedThreadPool(threadCount);
 
-            IvtMapByte ivtMapFile = new IvtMapByte(new File(_options._indexPrefix), "ivt" + batchNum, true);
+            IvtMapByte ivtMapFile = new IvtMapByte(new File(_options._indexPrefix), "ivt"
+                    + batchNum, true);
             Map<String, List<Byte>> ivtMap = new HashMap<String, List<Byte>>();
 
             List<InvertIndexBuildingTask> taskList = new ArrayList<InvertIndexBuildingTask>();
@@ -285,6 +286,9 @@ public class IndexerInvertedCompressed extends Indexer {
                 .readObjectFromFile(docMapFile);
         docUrlMap = (Map<String, Integer>) PersistentStoreManager.readObjectFromFile(docUrlFile);
         infoMap = (Map<String, Object>) PersistentStoreManager.readObjectFromFile(docInfoFile);
+
+        _totalTermFrequency = (Long) infoMap.get("_totalTermFrequency");
+        _numDocs = (Integer) infoMap.get("_numDocs");
     }
 
     private void cleanUpDirectory() {

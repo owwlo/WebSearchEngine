@@ -246,6 +246,9 @@ public class IndexerInvertedDoconly extends Indexer {
                 .readObjectFromFile(docMapFile);
         docUrlMap = (Map<String, Integer>) PersistentStoreManager.readObjectFromFile(docUrlFile);
         infoMap = (Map<String, Object>) PersistentStoreManager.readObjectFromFile(docInfoFile);
+
+        _totalTermFrequency = (Long) infoMap.get("_totalTermFrequency");
+        _numDocs = (Integer) infoMap.get("_numDocs");
     }
 
     private void cleanUpDirectory() {
