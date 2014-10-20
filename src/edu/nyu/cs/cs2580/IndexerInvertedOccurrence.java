@@ -446,6 +446,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         // Stem given term.
         Stemmer s = new Stemmer();
         s.add(term.toLowerCase().toCharArray(), term.length());
+        s.stem();
 
         if (!ivtContainsKey(s.toString())) {
             return 0;
@@ -472,6 +473,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         // Stem given term.
         Stemmer s = new Stemmer();
         s.add(term.toLowerCase().toCharArray(), term.length());
+        s.stem();
 
         if (!ivtContainsKey(s.toString())) {
             return 0;
@@ -517,6 +519,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         // Stem given term.
         Stemmer s = new Stemmer();
         s.add(term.toLowerCase().toCharArray(), term.length());
+        s.stem();
 
         if (!ivtContainsKey(s.toString())) {
             return 0;
