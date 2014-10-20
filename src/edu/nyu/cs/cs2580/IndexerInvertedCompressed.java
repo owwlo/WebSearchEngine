@@ -562,10 +562,10 @@ public class IndexerInvertedCompressed extends Indexer {
             while ((currByte & 0x80) == (byte) 0) {
                 code.add(currByte);
                 i++;
-                if (i >= list.size()){
-                	return -1;
-                }else{
-                	currByte = list.get(i);
+                if (i >= list.size()) {
+                    return -1;
+                } else {
+                    currByte = list.get(i);
                 }
             }
             code.add(currByte);
@@ -575,13 +575,13 @@ public class IndexerInvertedCompressed extends Indexer {
                 return pos;
             }
 
-            if (i >= list.size()){
-            	return -1;
+            if (i >= list.size()) {
+                return -1;
             }
             while ((list.get(i) & 0x80) == (byte) 0) {
                 i++;
-                if (i >= list.size()){
-                	return -1;
+                if (i >= list.size()) {
+                    return -1;
                 }
             }
             i++;
@@ -651,7 +651,7 @@ public class IndexerInvertedCompressed extends Indexer {
         if (cache.containsKey(key)) {
             return cache.get(key);
         }
-        if (cache.size() > 0) {
+        if (cache.size() > 1) {
             cache.remove(cache.keySet().toArray()[0]);
         }
         List<Byte> l = new ArrayList<Byte>();

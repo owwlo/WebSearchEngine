@@ -468,7 +468,7 @@ public class IndexerInvertedDoconly extends Indexer {
         if (cache.containsKey(key)) {
             return cache.get(key);
         }
-        if (cache.size() > 0) {
+        if (cache.size() > 1) {
             cache.remove(cache.keySet().toArray()[0]);
         }
         List<Integer> l = new ArrayList<Integer>();
