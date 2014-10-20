@@ -640,7 +640,7 @@ public class IndexerInvertedCompressed extends Indexer {
         if (cache.containsKey(key)) {
             return cache.get(key);
         }
-        if (cache.size() > 10) {
+        if (cache.size() > 0) {
             cache.remove(cache.keySet().toArray()[0]);
         }
         List<Byte> l = new ArrayList<Byte>();

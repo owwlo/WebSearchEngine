@@ -88,7 +88,7 @@ public class RankerFavorite extends Ranker {
 			String[] tokenArray = query._tokens.get(i).split(" ");
 			for (int j = 0; j < tokenArray.length; j++) {
 
-				String currentWord = query._tokens.get(j);
+				String currentWord = tokenArray[j];
 				logScore += calculateProbability(currentWord, d);
 			}
 		}
