@@ -163,7 +163,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         // Get all corpus files.
         List<File> files = getAllFiles(new File(corpusFolder));
 
-        int filesPerBatch = 1500;
+        int filesPerBatch = 1750;
 
         // initialStore(false, files.size() / filesPerBatch);
 
@@ -520,7 +520,7 @@ public class IndexerInvertedOccurrence extends Indexer {
             if (list.get(i) == docId) {
                 return pos;
             }
-            i++; //skip the occurrence
+            i++; // skip the occurrence
             i++; // go to the next docid
         }
         return -1;

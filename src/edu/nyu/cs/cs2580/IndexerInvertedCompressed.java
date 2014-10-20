@@ -182,7 +182,7 @@ public class IndexerInvertedCompressed extends Indexer {
         // Get all corpus files.
         List<File> files = getAllFiles(new File(corpusFolder));
 
-        int filesPerBatch = 1500;
+        int filesPerBatch = 1750;
 
         int threadCount = 1;
 
