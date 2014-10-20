@@ -496,13 +496,22 @@ public class IndexerInvertedCompressed extends Indexer {
         return false;
     }
 
+    private Map<String, List<Byte>> cache = new HashMap<String, List<Byte>>();
+
     private List<Byte> ivtGet(String key) {
+        if (cache.containsKey(key)) {
+            return cache.get(key);
+        }
+        if (cache.size() > 10) {
+            cache.remove(cache.keySet().toArray()[0]);
+        }
         List<Byte> l = new ArrayList<Byte>();
         for (Map<String, List<Byte>> m : ivtIndexMapList) {
             if (m.containsKey(key)) {
                 l.addAll(m.get(key));
             }
         }
+        cache.put(key, l);
         return l;
     }
 

@@ -462,13 +462,22 @@ public class IndexerInvertedDoconly extends Indexer {
         return false;
     }
 
+    private Map<String, List<Integer>> cache = new HashMap<String, List<Integer>>();
+
     private List<Integer> ivtGet(String key) {
+        if (cache.containsKey(key)) {
+            return cache.get(key);
+        }
+        if (cache.size() > 10) {
+            cache.remove(cache.keySet().toArray()[0]);
+        }
         List<Integer> l = new ArrayList<Integer>();
         for (Map<String, List<Integer>> m : ivtIndexMapList) {
             if (m.containsKey(key)) {
                 l.addAll(m.get(key));
             }
         }
+        cache.put(key, l);
         return l;
     }
 
