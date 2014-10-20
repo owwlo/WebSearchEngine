@@ -63,7 +63,6 @@ public class RankerFavorite extends Ranker {
         double totalF = this._indexer._totalTermFrequency;
         // System.out.println("termF: "+termF);
         // double totalF = (double) this._indexer.totalTermFrequency();
-        System.out.println("termF is: " + termF + "term total is: " + totalF);
         double pwc = termF / totalF;
         score = (1 - lambda) * pwd + lambda * pwc;
 
