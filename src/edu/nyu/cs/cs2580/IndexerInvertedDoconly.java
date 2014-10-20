@@ -8,35 +8,30 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Scanner;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
+import edu.nyu.cs.cs2580.utils.PersistentStoreManager.IvtMap;
 
 /**
  * @CS2580: Implement this class for HW2.
  */
 public class IndexerInvertedDoconly extends Indexer {
-    private DB documentDB = null;
-
+    private List<IvtMap> ivtIndexMapList = new ArrayList<IvtMap>();
     private Map<Integer, DocumentIndexed> docMap = null;
-    private Map<String, List<Integer>> docInvertedMap = null;
     private Map<String, Integer> docUrlMap = null;
     private Map<String, Object> infoMap = null;
 
     // Table name for index of documents.
     private static final String DOC_IDX_TBL = "docDB";
-    private static final String DOC_IVT_TBL = "docIvtDB";
     private static final String DOC_URL_TBL = "docUrlDB";
     private static final String DOC_INFO_TBL = "docInfoDB";
 
@@ -74,7 +69,7 @@ public class IndexerInvertedDoconly extends Indexer {
         public Map<String, List<Integer>> getIvtMapForThread() {
             return ivtMap;
         }
-        
+
         public long getTermCount() {
             return termCount;
         }
@@ -109,13 +104,18 @@ public class IndexerInvertedDoconly extends Indexer {
 
                     // Build inverted map.
                     token = s.toString();
+
+                    if (token.length() < 1 || token.length() > 20) {
+                        continue;
+                    }
+
                     if (!ivtMapItem.containsKey(token)) {
                         ivtMapItem.put(token, 0);
                     }
                     ivtMapItem.put(token, ivtMapItem.get(token) + 1);
                     passageLength++;
                 }
-                
+
                 termCount += passageLength;
 
                 String url = null;
@@ -155,23 +155,26 @@ public class IndexerInvertedDoconly extends Indexer {
 
         // Get all corpus files.
         List<File> files = getAllFiles(new File(corpusFolder));
-        
-        initialStore(false);
-        
-        infoMap.put("_numDocs", files.size());
 
         int threadCount = 1;
 
         System.out.println("Start building index with " + threadCount + " threads. Elapsed: "
                 + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
-        
+
         long termCount = 0;
 
-        int filesPerBatch = 1000;
-        for (int batchNum = 0; batchNum < files.size() / filesPerBatch; batchNum++) {
+        infoMap = new HashMap<String, Object>();
+        docMap = new HashMap<Integer, DocumentIndexed>();
+        docUrlMap = new HashMap<String, Integer>();
+
+        infoMap.put("_numDocs", files.size());
+
+        int filesPerBatch = 2000;
+
+        for (int batchNum = 0; batchNum < files.size() / filesPerBatch + 1; batchNum++) {
             int fileIdStart = batchNum * filesPerBatch;
             int fileIdEnd = (batchNum + 1) * filesPerBatch;
-            if (batchNum == (files.size() / filesPerBatch) - 1) {
+            if (fileIdEnd > files.size()) {
                 fileIdEnd = files.size();
             }
 
@@ -179,8 +182,9 @@ public class IndexerInvertedDoconly extends Indexer {
 
             ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
 
-            Map<String, Queue<Integer>> ivtMap = new ConcurrentHashMap<String, Queue<Integer>>();
-            List<InvertIndexBuildingTask> taskList = new ArrayList<IndexerInvertedDoconly.InvertIndexBuildingTask>();
+            IvtMap ivtMapFile = new IvtMap(new File(_options._indexPrefix), "ivt" + batchNum, true);
+
+            List<InvertIndexBuildingTask> taskList = new ArrayList<InvertIndexBuildingTask>();
 
             int totalFileCount = fileIdEnd - fileIdStart;
             int filesPerThread = totalFileCount / threadCount;
@@ -204,81 +208,44 @@ public class IndexerInvertedDoconly extends Indexer {
 
             // Combine all posting lists for N threads.
             for (InvertIndexBuildingTask iibt : taskList) {
-                Map<String, List<Integer>> ivtMapPerThread = iibt.getIvtMapForThread();
-                for (String token : ivtMapPerThread.keySet()) {
-                    if (!ivtMap.containsKey(token)) {
-                        ivtMap.put(token, new LinkedList<Integer>());
-                    }
-                    Queue<Integer> recordList = ivtMap.get(token);
-                    recordList.addAll(ivtMapPerThread.get(token));
-                }
+                ivtMapFile.putAll(iibt.getIvtMapForThread());
                 termCount += iibt.getTermCount();
             }
 
-            // Write ivtMap into storage.
-            long recordsCommit = 0;
-            System.out.println("Writing Inverted Map to disk. " + fileIdEnd
-                    + " pages have been processed. Elapsed: "
-                    + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
-            for (String token : ivtMap.keySet()) {
-                if (recordsCommit % 200000 == 0 && recordsCommit != 0) {
-                    documentDB.commit();
-                    System.out.println("Records commit size: " + recordsCommit);
-                }
-                List<Integer> ivtRecordList = new ArrayList<Integer>(ivtMap.get(token));
-                if (docInvertedMap.containsKey(token)) {
-                    List<Integer> dbRecordList = docInvertedMap.get(token);
-                    dbRecordList.addAll(ivtRecordList);
-                    docInvertedMap.put(token, dbRecordList);
-                } else {
-                    docInvertedMap.put(token, ivtRecordList);
-                }
+            ivtMapFile.close();
 
-                recordsCommit++;
-            }
-            documentDB.commit();
+            System.out.println("Batch commit done. Elapsed: "
+                    + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
+
             System.out.println("Batch commit done.");
         }
-        
+
         infoMap.put("_totalTermFrequency", termCount);
 
-        documentDB.commit();
-        documentDB.compact();
-        documentDB.close();
+        storeVariables();
 
         long end_t = System.currentTimeMillis();
 
         System.out.println("Construct done. Duration: " + (end_t - start_t) / 1000.0 + "s");
     }
 
-    private void initialStore(boolean readOnly) {
-        // Initialize Database
-        File f = new File(_options._indexPrefix, "docIdx");
+    private void storeVariables() {
+        File docMapFile = new File(this._options._indexPrefix, DOC_IDX_TBL);
+        File docUrlFile = new File(this._options._indexPrefix, DOC_URL_TBL);
+        File docInfoFile = new File(this._options._indexPrefix, DOC_INFO_TBL);
+        PersistentStoreManager.writeObjectToFile(docMapFile, docMap);
+        PersistentStoreManager.writeObjectToFile(docUrlFile, docUrlMap);
+        PersistentStoreManager.writeObjectToFile(docInfoFile, infoMap);
+    }
 
-        if (readOnly) {
-            documentDB = DBMaker.newFileDB(f)
-                    .mmapFileEnable()
-                    .readOnly()
-                    .transactionDisable()
-                    .compressionEnable()
-                    .make();
-        } else {
-            documentDB = DBMaker.newFileDB(f)
-                    .mmapFileEnable()
-                    .transactionDisable()
-                    .asyncWriteEnable()
-                    .compressionEnable()
-                    .make();
-        }
-
-        docMap = documentDB.createHashMap(DOC_IDX_TBL)
-                .makeOrGet();
-        docInvertedMap = documentDB.createHashMap(DOC_IVT_TBL)
-                .makeOrGet();
-        docUrlMap = documentDB.createHashMap(DOC_URL_TBL)
-                .makeOrGet();
-        infoMap = documentDB.createHashMap(DOC_INFO_TBL)
-                .makeOrGet();
+    private void readVariables() {
+        File docMapFile = new File(this._options._indexPrefix, DOC_IDX_TBL);
+        File docUrlFile = new File(this._options._indexPrefix, DOC_URL_TBL);
+        File docInfoFile = new File(this._options._indexPrefix, DOC_INFO_TBL);
+        docMap = (Map<Integer, DocumentIndexed>) PersistentStoreManager
+                .readObjectFromFile(docMapFile);
+        docUrlMap = (Map<String, Integer>) PersistentStoreManager.readObjectFromFile(docUrlFile);
+        infoMap = (Map<String, Object>) PersistentStoreManager.readObjectFromFile(docInfoFile);
     }
 
     private void cleanUpDirectory() {
@@ -296,9 +263,14 @@ public class IndexerInvertedDoconly extends Indexer {
 
     @Override
     public void loadIndex() throws IOException, ClassNotFoundException {
-        initialStore(true);
-        _numDocs = (Integer) infoMap.get("_numDocs");
-        _totalTermFrequency = (Long) infoMap.get("_totalTermFrequency");
+        for (int i = 0; i < 100; i++) {
+            File file = new File(_options._indexPrefix, "ivt" + i);
+            if (!file.exists()) {
+                break;
+            }
+            ivtIndexMapList.add(new IvtMap(new File(_options._indexPrefix), "ivt" + i, false));
+        }
+        readVariables();
     }
 
     @Override
@@ -367,7 +339,7 @@ public class IndexerInvertedDoconly extends Indexer {
             s.add(tokens.get(i).toLowerCase().toCharArray(), tokens.get(i).length());
             s.stem();
             // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
-            postingLists.add(docInvertedMap.get(s.toString()));
+            postingLists.add(ivtGet(s.toString()));
         }
         result = next(docid, postingLists);
         // System.out.println("the result is:"+result);
@@ -384,12 +356,12 @@ public class IndexerInvertedDoconly extends Indexer {
         s.add(term.toLowerCase().toCharArray(), term.length());
         s.stem();
 
-        if (!docInvertedMap.containsKey(s.toString())) {
+        if (!ivtContainsKey(s.toString())) {
             return 0;
         }
 
         // Get posting list from index.
-        List<Integer> l = docInvertedMap.get(s.toString());
+        List<Integer> l = ivtGet(s.toString());
 
         return l.size() / 2;
     }
@@ -401,13 +373,13 @@ public class IndexerInvertedDoconly extends Indexer {
         s.add(term.toLowerCase().toCharArray(), term.length());
         s.stem();
         // System.out.println("term is: "+ term+ "stemmer is: "+s.toString());
-        if (!docInvertedMap.containsKey(s.toString())) {
+        if (!ivtContainsKey(s.toString())) {
             // System.out.println("it is not contained...");
             return 0;
         }
         // System.out.println("OMG....");
         // Get posting list from index.
-        List<Integer> l = docInvertedMap.get(s.toString());
+        List<Integer> l = ivtGet(s.toString());
 
         int result = 0;
         for (int i = 0; i < l.size() / 2; i++) {
@@ -456,11 +428,11 @@ public class IndexerInvertedDoconly extends Indexer {
         s.add(term.toLowerCase().toCharArray(), term.length());
         s.stem();
 
-        if (!docInvertedMap.containsKey(s.toString())) {
+        if (!ivtContainsKey(s.toString())) {
             return 0;
         }
         // Get posting list from index.
-        List<Integer> l = docInvertedMap.get(s.toString());
+        List<Integer> l = ivtGet(s.toString());
 
         // Use binary search looking for docid within given posting list.
         int pos = binarySearchPostList(docid, l);
@@ -476,6 +448,25 @@ public class IndexerInvertedDoconly extends Indexer {
         } else {
             return 0;
         }
+    }
+
+    private boolean ivtContainsKey(String key) {
+        for (Map<String, List<Integer>> m : ivtIndexMapList) {
+            if (m.containsKey(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<Integer> ivtGet(String key) {
+        List<Integer> l = new ArrayList<Integer>();
+        for (Map<String, List<Integer>> m : ivtIndexMapList) {
+            if (m.containsKey(key)) {
+                l.addAll(m.get(key));
+            }
+        }
+        return l;
     }
 
     public static void main(String[] args) {

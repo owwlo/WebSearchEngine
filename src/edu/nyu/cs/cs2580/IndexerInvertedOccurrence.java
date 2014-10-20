@@ -27,10 +27,12 @@ public class IndexerInvertedOccurrence extends Indexer {
     private List<IvtMap> ivtIndexMapList = new ArrayList<IvtMap>();
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, Integer> docUrlMap = null;
+    private Map<String, Object> infoMap = null;
 
     // Table name for index of documents.
     private static final String DOC_IDX_TBL = "docDB";
     private static final String DOC_URL_TBL = "docUrlDB";
+    private static final String DOC_INFO_TBL = "docInfoDB";
 
     public IndexerInvertedOccurrence(Options options) {
         super(options);
@@ -55,6 +57,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         private int startFileIdx;
         private int endFileIdx;
         private Map<String, List<Integer>> ivtMap;
+        private long termCount = 0;
 
         public InvertIndexBuildingTask(List<File> files, int startFileIdx,
                 int endFileIdx, Map<String, List<Integer>> ivtMap) {
@@ -62,6 +65,10 @@ public class IndexerInvertedOccurrence extends Indexer {
             this.startFileIdx = startFileIdx;
             this.endFileIdx = endFileIdx;
             this.ivtMap = ivtMap;
+        }
+
+        public long getTermCount() {
+            return termCount;
         }
 
         @Override
@@ -109,6 +116,8 @@ public class IndexerInvertedOccurrence extends Indexer {
                     ivtMapItem.put(token, occList);
                     passageLength++;
                 }
+
+                termCount += passageLength;
 
                 String url = null;
                 try {
@@ -163,8 +172,13 @@ public class IndexerInvertedOccurrence extends Indexer {
                 + " threads. Elapsed: "
                 + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
 
+        infoMap = new HashMap<String, Object>();
         docMap = new HashMap<Integer, DocumentIndexed>();
         docUrlMap = new HashMap<String, Integer>();
+
+        infoMap.put("_numDocs", files.size());
+
+        long termCount = 0;
 
         for (int batchNum = 0; batchNum < files.size() / filesPerBatch + 1; batchNum++) {
             int fileIdStart = batchNum * filesPerBatch;
@@ -182,6 +196,8 @@ public class IndexerInvertedOccurrence extends Indexer {
             IvtMap ivtMapFile = new IvtMap(new File(_options._indexPrefix), "ivt" + batchNum, true);
             Map<String, List<Integer>> ivtMap = new HashMap<String, List<Integer>>();
 
+            List<InvertIndexBuildingTask> taskList = new ArrayList<InvertIndexBuildingTask>();
+
             int totalFileCount = fileIdEnd - fileIdStart;
             int filesPerThread = totalFileCount / threadCount;
             for (int threadId = 0; threadId < threadCount; threadId++) {
@@ -193,12 +209,18 @@ public class IndexerInvertedOccurrence extends Indexer {
                 InvertIndexBuildingTask iibt = new InvertIndexBuildingTask(
                         files, startFileIdx, endFileIdx, ivtMap);
                 threadPool.submit(iibt);
+                taskList.add(iibt);
             }
             threadPool.shutdown();
             try {
                 threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+
+            // Combine all posting lists for N threads.
+            for (InvertIndexBuildingTask iibt : taskList) {
+                termCount += iibt.getTermCount();
             }
 
             System.out.println("Writing Inverted Map to disk. " + fileIdEnd
@@ -212,6 +234,8 @@ public class IndexerInvertedOccurrence extends Indexer {
                     + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
         }
 
+        infoMap.put("_totalTermFrequency", termCount);
+
         storeVariables();
 
         long end_t = System.currentTimeMillis();
@@ -223,16 +247,20 @@ public class IndexerInvertedOccurrence extends Indexer {
     private void storeVariables() {
         File docMapFile = new File(this._options._indexPrefix, DOC_IDX_TBL);
         File docUrlFile = new File(this._options._indexPrefix, DOC_URL_TBL);
+        File docInfoFile = new File(this._options._indexPrefix, DOC_INFO_TBL);
         PersistentStoreManager.writeObjectToFile(docMapFile, docMap);
         PersistentStoreManager.writeObjectToFile(docUrlFile, docUrlMap);
+        PersistentStoreManager.writeObjectToFile(docInfoFile, infoMap);
     }
 
     private void readVariables() {
         File docMapFile = new File(this._options._indexPrefix, DOC_IDX_TBL);
         File docUrlFile = new File(this._options._indexPrefix, DOC_URL_TBL);
+        File docInfoFile = new File(this._options._indexPrefix, DOC_INFO_TBL);
         docMap = (Map<Integer, DocumentIndexed>) PersistentStoreManager
                 .readObjectFromFile(docMapFile);
         docUrlMap = (Map<String, Integer>) PersistentStoreManager.readObjectFromFile(docUrlFile);
+        infoMap = (Map<String, Object>) PersistentStoreManager.readObjectFromFile(docInfoFile);
     }
 
     private void cleanUpDirectory() {
@@ -250,7 +278,6 @@ public class IndexerInvertedOccurrence extends Indexer {
 
     @Override
     public void loadIndex() throws IOException, ClassNotFoundException {
-        // initialStore(true);
         for (int i = 0; i < 100; i++) {
             File file = new File(_options._indexPrefix, "ivt" + i);
             if (!file.exists()) {
