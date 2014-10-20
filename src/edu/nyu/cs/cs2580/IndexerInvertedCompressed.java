@@ -629,7 +629,7 @@ public class IndexerInvertedCompressed extends Indexer {
         if (pos != -1) {
             // Return term frequency for given doc and term
             int count = 0;
-            while (pos < l.size() - 1 && l.get(pos) == docid) {
+            while (pos < arr.size() - 1 && arr.get(pos) == docid) {
                 ++count;
                 pos += 2;
             }
