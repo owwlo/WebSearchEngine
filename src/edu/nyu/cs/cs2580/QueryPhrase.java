@@ -60,7 +60,10 @@ public class QueryPhrase extends Query {
             Query q = new QueryPhrase(query);
             q.processQuery();
             for (String token : q._tokens) {
-                System.out.println(token);
+            	 Stemmer s = new Stemmer();
+                 s.add(token.toLowerCase().toCharArray(), token.length());
+                 s.stem();
+                System.out.println(s.toString());
             }
         }
     }

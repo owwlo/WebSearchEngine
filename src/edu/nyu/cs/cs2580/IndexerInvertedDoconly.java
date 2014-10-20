@@ -301,7 +301,7 @@ public class IndexerInvertedDoconly extends Indexer {
         return postinglists.get(2 * end);
     }
 
-    private static int next(int docId, Vector<List<Integer>> postinglists) {
+    public static int next(int docId, Vector<List<Integer>> postinglists) {
         int[] docIds = new int[postinglists.size()];
         // System.out.println("current id is: "+docId);
         int previousVal = -1;

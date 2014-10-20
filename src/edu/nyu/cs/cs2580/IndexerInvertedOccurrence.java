@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -292,13 +293,143 @@ public class IndexerInvertedOccurrence extends Indexer {
     public Document getDoc(int docid) {
         return docMap.get(docid);
     }
-
+   
     /**
      * In HW2, you should be using {@link DocumentIndexed}.
      */
+    private static int nextInOccurence(int docId, List<Integer> postinglist){
+    	for (int i=0;i<postinglist.size();i+=2){
+    		if (postinglist.get(i)>docId)
+    			return postinglist.get(i);
+    	}
+    	return -1;
+    }
+    private static int nextForOccurence(int docId,Vector<List<Integer>> postinglists){
+    	 int[] docIds = new int[postinglists.size()];
+         // System.out.println("current id is: "+docId);
+         int previousVal = -1;
+         boolean equilibrium = true;
+         int maximum = Integer.MIN_VALUE;
+         for (int i = 0; i < postinglists.size(); i++) {
+             int currentId = nextInOccurence(docId, postinglists.get(i));
+             if (currentId < 0)
+                 return -1;
+             if (previousVal < 0) {
+                 previousVal = currentId;
+                 maximum = currentId;
+             }
+             else {
+                 if (previousVal != currentId) {
+                     equilibrium = false;
+                     maximum = Math.max(maximum, currentId);
+                 }
+             }
+         }
+         if (equilibrium == true)
+             return previousVal;
+         else
+             return nextForOccurence(maximum - 1, postinglists);
+    }
+    
+    private static int nextPos(List<Integer> postinglist, int docId, int pos){
+    	int docPosition=-1;
+    	for (int i=0;i<postinglist.size();i+=2){
+    		if (postinglist.get(i)==docId){
+    			docPosition=i;
+    			break;
+    		}    		
+    	}
+    	if (docPosition==-1)
+    		return -1;
+    	int Pos=docPosition+1;
+    	while(Pos<postinglist.size()&&postinglist.get(Pos-1)==docId){
+    		if (postinglist.get(Pos)>pos)
+    			return postinglist.get(Pos);
+    		Pos+=2;
+    	}
+    	return -1;
+    }
+    private static int nextPhrase(int docId,int pos, Vector<List<Integer>> postinglists){
+    	int[] positions=new int[postinglists.size()];
+    	boolean success=true;
+    	for (int i=0;i<positions.length;i++)
+    	{
+    		positions[i]=nextPos(postinglists.get(i),docId,pos);
+    		if (positions[i]<0)
+    			return -1;
+    	}
+    	//int maximum=positions[0];
+    	for (int i=1;i<positions.length;i++){
+    		if (positions[i]!=positions[i-1]+1)
+    			success=false;
+    		//if (positions[i]>maximum)
+    		//	maximum=positions[i];
+    	}
+    	if(success==true)
+    		return positions[0];
+    	else
+    		return nextPhrase(docId,positions[0],postinglists);
+    }
+    private static int nextPhrase(int docId,Vector<List<Integer>> postinglists){
+    	int docVerify=nextForOccurence(docId,postinglists);
+    	//System.out.println("docVerify is: "+docVerify);
+    	if (docVerify<0)
+    		return -1;
+    	int result=nextPhrase(docVerify,-1,postinglists);
+    	if (result>0)
+    		return docVerify;
+    	return nextPhrase(docVerify,postinglists);
+    }
+    
+    private static int next(int docId, Vector<Vector<List<Integer>>> postinglists) {
+        int[] docIds = new int[postinglists.size()];
+        // System.out.println("current id is: "+docId);
+        int previousVal = -1;
+        boolean equilibrium = true;
+        int maximum = Integer.MIN_VALUE;
+        for (int i = 0; i < postinglists.size(); i++) {
+            int currentId = nextPhrase(docId, postinglists.get(i));
+            if (currentId < 0)
+                return -1;
+            if (previousVal < 0) {
+                previousVal = currentId;
+                maximum = currentId;
+            }
+            else {
+                if (previousVal != currentId) {
+                    equilibrium = false;
+                    maximum = Math.max(maximum, currentId);
+                }
+            }
+        }
+        if (equilibrium == true)
+            return previousVal;
+        else
+            return next(maximum - 1, postinglists);
+    }
+    
     @Override
     public Document nextDoc(Query query, int docid) {
-        return null;
+    	 Vector<String> tokens = query._tokens;
+         int result = -1;
+         Vector<Vector<List<Integer>>> postingLists = new Vector<Vector<List<Integer>>>();
+         for (int i = 0; i < tokens.size(); i++) {
+             Stemmer s = new Stemmer();
+             s.add(tokens.get(i).toLowerCase().toCharArray(), tokens.get(i).length());
+             s.stem();
+             Vector<List<Integer>> container=new Vector<List<Integer>> ();
+             String[] consecutiveWords=s.toString().split(" ");
+             for (int j=0;j<consecutiveWords.length;j++)
+            	 container.add(ivtGet(consecutiveWords[j]));
+             // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
+             postingLists.add(container);
+         }
+         result = next(docid, postingLists);
+         // System.out.println("the result is:"+result);
+         if (result < 0)
+             return null;
+         else
+             return getDoc(result);
     }
 
     @Override
@@ -421,5 +552,28 @@ public class IndexerInvertedOccurrence extends Indexer {
             }
         }
         return l;
+    }
+    
+    public static void main(String[] args){
+    	int[] first={1,2,1,4,1,7,2,5,2,7,3,6,3,9};
+    	int[] second={1,8,2,6,3,5,3,10};
+    	int[] third={1,9,2,7,3,11};
+    	List<Integer> firstA=new ArrayList<Integer> ();
+    	List<Integer> secondA=new ArrayList<Integer> ();
+    	List<Integer> thirdA=new ArrayList<Integer> ();
+    	for (int i=0;i<first.length;i++)
+    		firstA.add(first[i]);
+    	for (int i=0;i<second.length;i++)
+    	    secondA.add(second[i]);
+    	for (int i=0;i<third.length;i++)
+    		thirdA.add(third[i]);
+    	Vector<List<Integer>> postinglists=new Vector<List<Integer>> ();
+    	postinglists.add(firstA);
+    	postinglists.add(secondA);
+    	postinglists.add(thirdA);
+    	Vector<Vector<List<Integer>>> container=new Vector<Vector<List<Integer>>>();
+    	container.add(postinglists);
+    	int doc=next(2, container);
+    	System.out.println("next is: "+doc);
     }
 }
