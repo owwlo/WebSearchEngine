@@ -16,16 +16,17 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
+import org.owwlo.InvertedIndexing.InvertedIndexBuilder;
+import org.owwlo.InvertedIndexing.InvertedIndexBuilder.IvtMapInteger;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
-import edu.nyu.cs.cs2580.utils.PersistentStoreManager.IvtMap;
 
 /**
  * @CS2580: Implement this class for HW2.
  */
 public class IndexerInvertedOccurrence extends Indexer {
-    private List<IvtMap> ivtIndexMapList = new ArrayList<IvtMap>();
+    private List<IvtMapInteger> ivtIndexMapList = new ArrayList<IvtMapInteger>();
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, Integer> docUrlMap = null;
     private Map<String, Object> infoMap = null;
@@ -179,6 +180,9 @@ public class IndexerInvertedOccurrence extends Indexer {
 
         infoMap.put("_numDocs", files.size());
 
+        InvertedIndexBuilder builder = InvertedIndexBuilder.getBuilder(new File(
+                _options._indexPrefix));
+
         long termCount = 0;
 
         for (int batchNum = 0; batchNum < files.size() / filesPerBatch + 1; batchNum++) {
@@ -194,7 +198,7 @@ public class IndexerInvertedOccurrence extends Indexer {
             ExecutorService threadPool = Executors
                     .newFixedThreadPool(threadCount);
 
-            IvtMap ivtMapFile = new IvtMap(new File(_options._indexPrefix), "ivt" + batchNum, true);
+            IvtMapInteger ivtMapFile = builder.createDistributedIvtiIntegerMap();
             Map<String, List<Integer>> ivtMap = new HashMap<String, List<Integer>>();
 
             List<InvertIndexBuildingTask> taskList = new ArrayList<InvertIndexBuildingTask>();
@@ -239,6 +243,8 @@ public class IndexerInvertedOccurrence extends Indexer {
 
         storeVariables();
 
+        builder.close();
+
         long end_t = System.currentTimeMillis();
 
         System.out.println("Construct done. Duration: " + (end_t - start_t)
@@ -282,13 +288,10 @@ public class IndexerInvertedOccurrence extends Indexer {
 
     @Override
     public void loadIndex() throws IOException, ClassNotFoundException {
-        for (int i = 0; i < 100; i++) {
-            File file = new File(_options._indexPrefix, "ivt" + i);
-            if (!file.exists()) {
-                break;
-            }
-            ivtIndexMapList.add(new IvtMap(new File(_options._indexPrefix), "ivt" + i, false));
-        }
+        InvertedIndexBuilder builder = InvertedIndexBuilder.getBuilder(new File(
+                _options._indexPrefix));
+        IvtMapInteger ivtMapBatch = builder.getUnifiedDistributedIvtiIntegerMap();
+        ivtIndexMapList.add(ivtMapBatch);
         readVariables();
     }
 
