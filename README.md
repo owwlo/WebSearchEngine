@@ -1,2 +1,4 @@
-web_search_engine_course
-========================
+Web Search Engine
+===
+
+Course Project for Web Search Engine Fall 2014 @ NYU.
