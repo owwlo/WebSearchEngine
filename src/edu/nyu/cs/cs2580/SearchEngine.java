@@ -53,7 +53,9 @@ public class SearchEngine {
         public String _indexerType = null;
 
         // Additional group specific configuration can be added below.
-
+        public String _corpusAnalyzerType=null;
+        
+        public String _logMinerType=null;
         /**
          * Constructor for options.
          * 
@@ -83,11 +85,14 @@ public class SearchEngine {
             _corpusPrefix = options.get("corpus_prefix");
             Check(_corpusPrefix != null, "Missing option: corpus_prefix!");
             _indexPrefix = options.get("index_prefix");
-            Check(_indexPrefix != null, "Missing option: index_prefix!");
-
+            Check(_indexPrefix != null, "Missing option: index_prefix!");           
             // Populate specific options.
             _indexerType = options.get("indexer_type");
             Check(_indexerType != null, "Missing option: indexer_type!");
+            _corpusAnalyzerType = options.get("corpus_analyzer_type");
+            Check(_corpusAnalyzerType != null, "Missing option: corpus_analyzer_type!");
+            _logMinerType = options.get("log_miner_type");
+            Check(_logMinerType != null, "Missing option: log_miner_type!");
         }
     }
 
@@ -110,6 +115,7 @@ public class SearchEngine {
         NONE,
         INDEX,
         SERVE,
+        MINING
     };
 
     public static Mode MODE = Mode.NONE;
@@ -134,7 +140,7 @@ public class SearchEngine {
                 OPTIONS = new Options(value);
             }
         }
-        Check(MODE == Mode.SERVE || MODE == Mode.INDEX,
+        Check(MODE == Mode.SERVE || MODE == Mode.INDEX || MODE==Mode.MINING,
                 "Must provide a valid mode: serve or index!");
         Check(MODE != Mode.SERVE || PORT != -1,
                 "Must provide a valid port number (258XX) in serve mode!");
@@ -173,7 +179,15 @@ public class SearchEngine {
                 "Listening on port: " + Integer.toString(SearchEngine.PORT));
         ServerRunner.executeInstance(new FileServer("", SearchEngine.PORT, rootDirs, handler));
     }
-
+    private static void startMining() throws IOException{
+    	
+    	CorpusAnalyzer corpus=CorpusAnalyzer.Factory.getCorpusAnalyzerByOption(SearchEngine.OPTIONS);
+    	corpus.prepare();
+    	corpus.compute();
+    	LogMiner numview=LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
+    	
+    	
+    }
     public static void main(String[] args) throws IOException {
         try {
             SearchEngine.parseCommandLine(args);
@@ -184,6 +198,9 @@ public class SearchEngine {
                 case SERVE:
                     startServing();
                     break;
+                case MINING:
+                	startMining();
+                	break;
                 default:
                     Check(false, "Wrong mode for SearchEngine!");
             }
