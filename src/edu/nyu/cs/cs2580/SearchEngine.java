@@ -42,6 +42,7 @@ public class SearchEngine {
         // The parent path where the corpus resides.
         // HW1: We have only one file, corpus.csv.
         // HW2: We have a partial Wikipedia dump.
+    	public String _logPrefix = null;
         public String _corpusPrefix = null;
 
         // The parent path where the constructed index resides.
@@ -85,7 +86,9 @@ public class SearchEngine {
             _corpusPrefix = options.get("corpus_prefix");
             Check(_corpusPrefix != null, "Missing option: corpus_prefix!");
             _indexPrefix = options.get("index_prefix");
-            Check(_indexPrefix != null, "Missing option: index_prefix!");           
+            Check(_indexPrefix != null, "Missing option: index_prefix!");
+            _logPrefix = options.get("log_prefix");
+            Check(_logPrefix!=null,"Missing option: log_prefix!");
             // Populate specific options.
             _indexerType = options.get("indexer_type");
             Check(_indexerType != null, "Missing option: indexer_type!");
@@ -185,6 +188,7 @@ public class SearchEngine {
     	corpus.prepare();
     	corpus.compute();
     	LogMiner numview=LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
+    	numview.compute();
     	
     	
     }

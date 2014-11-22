@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -39,7 +41,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
    * @throws IOException
    */
   private Map<String,Integer> indexDocs;
-  private List<List<Integer>> graph;
+  private List<Set<Integer>> graph;
   double lambda=0.9;
   int priter=2;
   @Override
@@ -77,9 +79,9 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
      * Second step, Iterate all the documents again
      * Used a List<List<Integer>> to store the graph relationship 
      */
-     graph=new ArrayList<List<Integer>> ();
+     graph=new ArrayList<Set<Integer>> ();
      for (int i=0;i<indexDocs.size();i++)
-    	 graph.add(new ArrayList<Integer> ());
+    	 graph.add(new HashSet<Integer> ());
      for (String document:documents){
     	 if (document.startsWith(".")==true)
     		 continue;
@@ -94,7 +96,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     			 break;
     		 if (indexDocs.containsKey(link)==true&&documentIndex!=indexDocs.get(link)){
     			 int outIndex=indexDocs.get(link);
-    			 List<Integer> target=graph.get(documentIndex);
+    			 Set<Integer> target=graph.get(documentIndex);
     			 if (target.contains(outIndex)==false)
     				 target.add(outIndex);
     		 }
@@ -134,10 +136,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		}
 		for (int iter = 0; iter < priter; iter++) {
 			for (int i = 0; i < graph.size(); i++) {
-				List<Integer> outlinks = graph.get(i);
+				Set<Integer> outlinks = graph.get(i);
 				double outbound = (double) outlinks.size();
-				for (int j = 0; j < outlinks.size(); j++)
-					nextPR[outlinks.get(j)] += currentPR[i] / outbound;
+				for (Integer element:outlinks)
+					nextPR[element] += currentPR[i] / outbound;
 			}
 			for (int i=0;i<nextPR.length;i++){
 				currentPR[i]=lambda*nextPR[i]+(1-lambda);
@@ -146,7 +148,9 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 				nextPR[i]=0.0;
 			}
 		}
-		new File(_options._indexPrefix).mkdir();
+		File indexDic=new File(_options._indexPrefix);
+		if (indexDic.exists()==false)
+			indexDic.mkdir();
 		//Write to files
 		String des=_options._indexPrefix+"/PR.index";
 		PrintWriter writer = new PrintWriter(des,"UTF-8");
