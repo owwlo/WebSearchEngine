@@ -32,7 +32,7 @@ public class RankerFavorite extends Ranker {
         double score = 0;
         double sind = 0;
 
-        sind = (double) _indexer.documentTermFrequency(currentWord, d.getUrl());
+        sind = (double) _indexer.documentTermFrequency(currentWord, d._docid);
         double ds = d.getLength();
 
         double pwd = sind / ds;

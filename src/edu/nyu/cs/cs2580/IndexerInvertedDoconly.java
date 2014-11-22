@@ -425,35 +425,36 @@ public class IndexerInvertedDoconly extends Indexer {
     }
 
     @Override
-    public int documentTermFrequency(String term, String url) {
-        // Get docid for specific url.
-        int docid = docUrlMap.get(url);
-
-        // Stem given term.
-        Stemmer s = new Stemmer();
-        s.add(term.toLowerCase().toCharArray(), term.length());
-        s.stem();
-
-        if (!ivtContainsKey(s.toString())) {
-            return 0;
-        }
-        // Get posting list from index.
-        List<Integer> l = ivtGet(s.toString());
-
-        // Use binary search looking for docid within given posting list.
-        int pos = binarySearchPostList(docid, l);
-        /*
-         * if (docid==637){ System.out.println("i am at 637");
-         * System.out.println("position is:"+l.get(pos+1)); for (int
-         * i=0;i<l.size();i++) System.out.printf(" "+l.get(i)+" "); }
-         */
-        if (pos != -1) {
-            // Return term frequency for given doc and term
-            // System.out.println("current num is: "+l.get(pos+1));
-            return l.get(pos + 1);
-        } else {
-            return 0;
-        }
+    public int documentTermFrequency(String term, int docid) {
+        return 0;
+//        // Get docid for specific url.
+//        int docid = docUrlMap.get(url);
+//
+//        // Stem given term.
+//        Stemmer s = new Stemmer();
+//        s.add(term.toLowerCase().toCharArray(), term.length());
+//        s.stem();
+//
+//        if (!ivtContainsKey(s.toString())) {
+//            return 0;
+//        }
+//        // Get posting list from index.
+//        List<Integer> l = ivtGet(s.toString());
+//
+//        // Use binary search looking for docid within given posting list.
+//        int pos = binarySearchPostList(docid, l);
+//        /*
+//         * if (docid==637){ System.out.println("i am at 637");
+//         * System.out.println("position is:"+l.get(pos+1)); for (int
+//         * i=0;i<l.size();i++) System.out.printf(" "+l.get(i)+" "); }
+//         */
+//        if (pos != -1) {
+//            // Return term frequency for given doc and term
+//            // System.out.println("current num is: "+l.get(pos+1));
+//            return l.get(pos + 1);
+//        } else {
+//            return 0;
+//        }
     }
 
     private boolean ivtContainsKey(String key) {

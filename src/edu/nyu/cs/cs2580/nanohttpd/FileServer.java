@@ -18,6 +18,7 @@ import java.util.Map;
 import com.sun.net.httpserver.HttpHandler;
 
 import edu.nyu.cs.cs2580.QueryHandler;
+import edu.nyu.cs.cs2580.nanohttpd.NanoHTTPD;
 import edu.nyu.cs.cs2580.utils.FakeHttpExchange;
 
 public class FileServer extends NanoHTTPD {

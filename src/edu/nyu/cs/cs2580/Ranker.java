@@ -8,16 +8,22 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 /**
  * This is the abstract Ranker class for all concrete Ranker implementations.
+ *
  * Use {@link Ranker.Factory} to create your concrete Ranker implementation. Do
- * NOT change the interface in this class! In HW1: {@link RankerFullScan} is the
- * instructor's simple ranker and students implement four additional concrete
- * Rankers. In HW2: students will pick a favorite concrete Ranker other than
- * {@link RankerPhrase}, and re-implement it using the more efficient concrete
- * Indexers. 2013-02-16: The instructor's code went through substantial
- * refactoring between HW1 and HW2, students are expected to refactor code
- * accordingly. Refactoring is a common necessity in real world and part of the
- * learning experience.
- * 
+ * NOT change the interface in this class!
+ *
+ * In HW1: {@link RankerFullScan} is the instructor's simple ranker and students
+ * implement four additional concrete Rankers.
+ *
+ * In HW2: students will pick a favorite concrete Ranker other than
+ * {@link RankerPhrase}, and re-implement it using the more efficient
+ * concrete Indexers.
+ *
+ * 2013-02-16: The instructor's code went through substantial refactoring
+ * between HW1 and HW2, students are expected to refactor code accordingly.
+ * Refactoring is a common necessity in real world and part of the learning
+ * experience.
+ *
  * @author congyu
  * @author fdiaz
  */

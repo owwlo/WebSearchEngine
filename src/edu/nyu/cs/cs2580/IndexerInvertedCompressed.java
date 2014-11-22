@@ -606,65 +606,38 @@ public class IndexerInvertedCompressed extends Indexer {
     }
 
     @Override
-    public int documentTermFrequency(String term, String url) {
-        // Get docid for specific url.
-        int docid = docUrlMap.get(url);
-
-        // Stem given term.
-        Stemmer s = new Stemmer();
-        s.add(term.toLowerCase().toCharArray(), term.length());
-        s.stem();
-
-        if (!ivtContainsKey(s.toString())) {
-            return 0;
-        }
-
-        // Get posting list from index.
-        List<Byte> l = ivtGet(s.toString());
-        ArrayList<Integer> arr = decompressArray(l);
-
-        // Use binary search looking for docid within given posting list.
-        int pos = linearSearchPostDecompressed(docid, arr);
-
-        if (pos != -1) {
-            // Return term frequency for given doc and term
-            int count = 0;
-            while (pos < arr.size() - 1 && arr.get(pos) == docid) {
-                ++count;
-                pos += 2;
-            }
-            return count;
-        } else {
-            return 0;
-        }
-
-        /*
-        if (pos != -1) {
-            // Return term frequency for given doc and term
-            int count = 0;
-            while (pos < l.size() - 1) {
-                ArrayList<Byte> currId = new ArrayList<Byte>();
-                // get the current id
-                while ((l.get(pos) & 0x80) == (byte) 0) {
-                    currId.add(l.get(pos));
-                    pos++;
-                }
-                currId.add(l.get(pos));
-                pos++;
-
-                int curr_id = decompressBytes(currId);
-                if (curr_id == docid) {
-                    ++count;
-                    pos++;
-                } else {
-                    break;
-                }
-            }
-            return count;
-        } else {
-            return 0;
-        }
-        */
+    public int documentTermFrequency(String term, int docid) {
+        return docid;
+//        // Get docid for specific url.
+//        int docid = docUrlMap.get(url);
+//
+//        // Stem given term.
+//        Stemmer s = new Stemmer();
+//        s.add(term.toLowerCase().toCharArray(), term.length());
+//        s.stem();
+//
+//        if (!ivtContainsKey(s.toString())) {
+//            return 0;
+//        }
+//
+//        // Get posting list from index.
+//        List<Byte> l = ivtGet(s.toString());
+//        ArrayList<Integer> arr = decompressArray(l);
+//
+//        // Use binary search looking for docid within given posting list.
+//        int pos = linearSearchPostDecompressed(docid, arr);
+//
+//        if (pos != -1) {
+//            // Return term frequency for given doc and term
+//            int count = 0;
+//            while (pos < arr.size() - 1 && arr.get(pos) == docid) {
+//                ++count;
+//                pos += 2;
+//            }
+//            return count;
+//        } else {
+//            return 0;
+//        }
     }
 
     private boolean ivtContainsKey(String key) {

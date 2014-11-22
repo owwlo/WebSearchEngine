@@ -530,38 +530,39 @@ public class IndexerInvertedOccurrence extends Indexer {
     }
 
     @Override
-    public int documentTermFrequency(String term, String url) {
-        // Number of times {@code term} appeared in the document {@code url}
-
-        // Get docid for specific url.
-        int docid = docUrlMap.get(url);
-
-        // Stem given term.
-        Stemmer s = new Stemmer();
-        s.add(term.toLowerCase().toCharArray(), term.length());
-        s.stem();
-
-        if (!ivtContainsKey(s.toString())) {
-            return 0;
-        }
-
-        // Get posting list from index.
-        List<Integer> l = ivtGet(s.toString());
-
-        // Use binary search looking for docid within given posting list.
-        int pos = linearSearchPostList(docid, l);
-
-        if (pos != -1) {
-            // Return term frequency for given doc and term
-            int count = 0;
-            while (pos < l.size() - 1 && l.get(pos) == docid) {
-                ++count;
-                pos += 2;
-            }
-            return count;
-        } else {
-            return 0;
-        }
+    public int documentTermFrequency(String term, int docid) {
+        return docid;
+//        // Number of times {@code term} appeared in the document {@code url}
+//
+//        // Get docid for specific url.
+//        int docid = docUrlMap.get(url);
+//
+//        // Stem given term.
+//        Stemmer s = new Stemmer();
+//        s.add(term.toLowerCase().toCharArray(), term.length());
+//        s.stem();
+//
+//        if (!ivtContainsKey(s.toString())) {
+//            return 0;
+//        }
+//
+//        // Get posting list from index.
+//        List<Integer> l = ivtGet(s.toString());
+//
+//        // Use binary search looking for docid within given posting list.
+//        int pos = linearSearchPostList(docid, l);
+//
+//        if (pos != -1) {
+//            // Return term frequency for given doc and term
+//            int count = 0;
+//            while (pos < l.size() - 1 && l.get(pos) == docid) {
+//                ++count;
+//                pos += 2;
+//            }
+//            return count;
+//        } else {
+//            return 0;
+//        }
     }
 
     private boolean ivtContainsKey(String key) {

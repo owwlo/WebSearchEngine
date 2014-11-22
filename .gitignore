@@ -2,7 +2,7 @@
 *.idx
 data/wiki
 data/index
-*.DS_Store
+.DS_Store
 *~
 
 # Mobile Tools for Java (J2ME)
