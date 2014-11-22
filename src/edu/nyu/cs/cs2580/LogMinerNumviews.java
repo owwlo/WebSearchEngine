@@ -1,6 +1,13 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -27,9 +34,62 @@ public class LogMinerNumviews extends LogMiner {
    * @throws IOException
    */
   @Override
-  public void compute() throws IOException {
-    System.out.println("Computing using " + this.getClass().getName());
-    return;
+	public void compute() throws IOException {
+	  System.out.println("Computing using " + this.getClass().getName());
+		/*
+		 * First step, Iterate all the documents and store store-int
+		 * relationship During this step, deal with the redirection as well.
+		 */
+		File dir = new File(_options._corpusPrefix);
+		String[] documents = dir.list();
+		Map<String, Integer> indexDocs = new HashMap<String, Integer>();
+		for (String document : documents) {
+			if (document.startsWith(".")==true)
+	    		 continue;
+			indexDocs.put(document, 0);
+		}
+		File logDir = new File(_options._logPrefix);
+		documents = logDir.list();
+		for (String document : documents) {
+			FileInputStream fis = new FileInputStream(_options._logPrefix + "/"
+					+ document);
+
+			// Construct BufferedReader from InputStreamReader
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				String[] seperates = line.split(" ");
+				if (seperates.length < 3
+						|| seperates[2].matches("\\d+") == false||indexDocs.containsKey(seperates[1])==false)
+					continue;
+				int numView = Integer.parseInt(seperates[2]);
+				if (indexDocs.containsKey(seperates[1]) == true
+						&& indexDocs.containsKey(seperates[1] + ".html") == true) {
+					indexDocs.put(seperates[1] + ".html",
+							indexDocs.get(seperates[1] + ".html") + numView);
+				} else {
+					indexDocs.put(seperates[1], indexDocs.get(seperates[1])
+							+ numView);
+				}
+			}
+
+			br.close();
+		}
+		File indexDic=new File(_options._indexPrefix);
+		if (indexDic.exists()==false)
+			indexDic.mkdir();
+		//Write to files
+		String des=_options._indexPrefix+"/numView.index";
+		PrintWriter writer = new PrintWriter(des,"UTF-8");
+		for (String key:indexDocs.keySet()){
+			
+			int numView=indexDocs.get(key);
+			writer.println(key+" "+numView);
+		}
+		writer.close();
+		indexDocs.clear();
+	  
+        return;
   }
 
   /**
