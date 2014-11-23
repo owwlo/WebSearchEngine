@@ -99,8 +99,19 @@ public class LogMinerNumviews extends LogMiner {
    * @throws IOException
    */
   @Override
-  public Object load() throws IOException {
-    System.out.println("Loading using " + this.getClass().getName());
-    return null;
-  }
+	public Object load() throws IOException {
+		System.out.println("Loading using " + this.getClass().getName());
+		FileInputStream fis = new FileInputStream(_options._indexPrefix
+				+ "/numView.index");
+		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+		String line = null;
+		Map<String, Double> numView = new HashMap<String, Double>();
+		while ((line = br.readLine()) != null) {
+			String[] splits = line.split(" ");
+			double val = Double.valueOf(splits[1]);
+			numView.put(splits[0], val);
+		}
+		br.close();
+		return numView;
+	}
 }
