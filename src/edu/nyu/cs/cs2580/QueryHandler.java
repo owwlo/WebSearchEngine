@@ -11,6 +11,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import edu.nyu.cs.cs2580.Bhattacharyya.Pair;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 import edu.nyu.cs.cs2580.utils.ClickLoggingManager;
 import edu.nyu.cs.cs2580.utils.ScoredDocumentComparator;
@@ -170,11 +171,12 @@ public class QueryHandler implements HttpHandler {
 	}
 
 	// hw3 prf: query representation output
-	private void constructTermOutput(final Map.Entry<String, Double>[] terms,
+	private void constructTermOutput(final ArrayList<Pair<String, Double>> terms,
 			StringBuffer response) {
-		for (int i = terms.length - 1; i >= 0; ++i) {
+		for (int i = terms.size() - 1; i >= 0; ++i) {
 			response.append(response.length() > 0 ? "\n" : "");
-			response.append(terms[i].getKey() + "\t" + terms[i].getValue());
+			Pair<String, Double> p = terms.get(i);
+			response.append(p.first + "\t" + p.second);
 		}
 		response.append(response.length() > 0 ? "\n" : "");
 	}
@@ -336,17 +338,23 @@ public class QueryHandler implements HttpHandler {
 			Map<String, Double> term_map = new HashMap<String, Double>();
 			int all_occ = 0; // all term occ in all k docs
 			// aggregate over k documents
+			
+			//	System.out.println("get scoredDocs size "+scoredDocs.size());
 			for (ScoredDocument sdoc : scoredDocs) {
 				Map<String, Integer> termInDoc = _indexer.documentTermFrequencyMap(sdoc._doc._docid);
 						//new HashMap<String, Integer>();// _indexer.getTerms(sdoc._doc._docid);
-				//all_occ += termInDoc.size();
-
+				
+				// System.out.println("get empty term set???:"+termInDoc.size());
 				for (Map.Entry<String, Integer> entry : termInDoc.entrySet()) {
 					String term = entry.getKey();
 					Integer occ = entry.getValue();
 
-					if (stopWords.contains(term)) continue;
+					if (stopWords.contains(term)) {
+					//	System.out.println("get a stopword "+term);
+						continue;
+					}
 					
+					// System.out.println("term:occ:"+term+":"+occ);
 					all_occ += occ;
 					if (term_map.containsKey(term)) {
 						term_map.put(term, term_map.get(term) + occ);
@@ -356,7 +364,7 @@ public class QueryHandler implements HttpHandler {
 				}
 			}
 			if (all_occ == 0) {
-				System.out.println("all_occ == 0 ???");
+				System.err.println("all_occ == 0 ???");
 			}
 
 			// get the top m terms in ascending order
@@ -368,15 +376,16 @@ public class QueryHandler implements HttpHandler {
 					topTerms.poll();
 				}
 			}
-			Map.Entry<String, Double>[] top_term = (Map.Entry<String, Double>[]) topTerms
-					.toArray();
-			Arrays.sort(top_term);
+			ArrayList<Pair<String, Double>> top_term = new ArrayList<Pair<String, Double>>();
+			while (topTerms.size() > 0){
+				top_term.add(new Pair<String, Double>(topTerms.poll()));
+			}
 
 			// divide by denominator
 			double sum = 0.0;
-			for (Map.Entry<String, Double> e : top_term) {
-				double prob = e.getValue() / all_occ;
-				e.setValue(prob);
+			for (Pair<String, Double> e : top_term) {
+				double prob = e.second / all_occ;
+				e.second = prob;
 				sum += prob;
 			}
 			if (sum == 0.0) {
@@ -386,8 +395,8 @@ public class QueryHandler implements HttpHandler {
 			}
 
 			// normalize
-			for (Map.Entry<String, Double> e : top_term) {
-				e.setValue(e.getValue() / sum);
+			for (Pair<String, Double> e : top_term) {
+				e.second /= sum;
 			}
 
 			constructTermOutput(top_term, response);
