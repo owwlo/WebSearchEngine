@@ -21,6 +21,11 @@ public class Bhattacharyya {
 			this.first = first;
 			this.second = second;
 		}
+		public Pair(Map.Entry<A, B> e){
+			super();
+			this.first = e.getKey();
+			this.second = e.getValue();
+		}
 
 		public int hashCode() {
 			int hashFirst = first != null ? first.hashCode() : 0;
