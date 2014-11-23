@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -41,6 +42,20 @@ public class QueryHandler implements HttpHandler {
 	 * which Ranker to use and what output format to adopt. For simplicity, all
 	 * arguments are publicly accessible.
 	 */
+	public static Set<String> stopWords = new HashSet<String>(Arrays.asList(new String[]{
+			"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours",
+			"yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers",
+			"herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves",
+			"what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are",
+			"was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does",
+			"did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until",
+			"while", "of", "at", "by", "for", "with", "about", "against", "between", "into",
+			"through", "during", "before", "after", "above", "below", "to", "from", "up", "down",
+			"in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here",
+			"there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more",
+			"most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so",
+			"than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"
+	}));
 	public static class CgiArguments {
 		// The raw user query
 		public String _query = "";
@@ -345,9 +360,11 @@ public class QueryHandler implements HttpHandler {
 			PriorityQueue<Map.Entry<String, Double>> topTerms = new PriorityQueue<Map.Entry<String, Double>>(
 					cgiArgs._numTerms, new CompareByValue());
 			for (Map.Entry<String, Double> entry : term_map.entrySet()) {
-				topTerms.add(entry);
-				if (topTerms.size() > cgiArgs._numTerms) {
-					topTerms.poll();
+				if (!stopWords.contains(entry)){
+					topTerms.add(entry);
+					if (topTerms.size() > cgiArgs._numTerms) {
+						topTerms.poll();
+					}
 				}
 			}
 			Map.Entry<String, Double>[] top_term = (Map.Entry<String, Double>[]) topTerms
