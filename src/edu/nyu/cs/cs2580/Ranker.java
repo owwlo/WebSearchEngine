@@ -78,6 +78,8 @@ public abstract class Ranker {
                     return new SignalFactory.phraseRunner(options, arguments, indexer);
                 case LINEAR:
                     return new SignalFactory.linearRunner(options, arguments, indexer);
+                case COMPREHENSIVE:
+                    return new RankerComprehensive(options, arguments, indexer);
                 case NONE:
                     // Fall through intended
                 default:
