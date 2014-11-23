@@ -173,7 +173,7 @@ public class QueryHandler implements HttpHandler {
 	// hw3 prf: query representation output
 	private void constructTermOutput(final ArrayList<Pair<String, Double>> terms,
 			StringBuffer response) {
-		for (int i = terms.size() - 1; i >= 0; ++i) {
+		for (int i = terms.size() - 1; i >= 0; --i) {
 			response.append(response.length() > 0 ? "\n" : "");
 			Pair<String, Double> p = terms.get(i);
 			response.append(p.first + "\t" + p.second);
@@ -389,7 +389,7 @@ public class QueryHandler implements HttpHandler {
 				sum += prob;
 			}
 			if (sum == 0.0) {
-				System.out.println("sum == 0 ???");
+				System.err.println("sum == 0 ???");
 			} else {
 				System.out.println("Sum is " + sum);
 			}
