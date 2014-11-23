@@ -546,6 +546,22 @@ public class IndexerInvertedCompressed extends Indexer {
         return result / 2;
     }
 
+    // do linear search of a docid for compressed posting list, first occurrence
+    private int linearSearchPostDecompressed(final int docId, final List<Integer> list) {
+        int i = 0;
+        int pos = -1;
+        while (i < list.size()) {
+            pos = i;
+
+            if (list.get(i) == docId) {
+                return pos;
+            }
+            i++; // skip the occurrence
+            i++; // go to the next docid
+        }
+        return -1;
+    }
+
     @Override
     public int documentTermFrequency(String term, int docid) {
         // Stem given term.
@@ -553,13 +569,28 @@ public class IndexerInvertedCompressed extends Indexer {
         s.add(term.toLowerCase().toCharArray(), term.length());
         s.stem();
 
-        Map<String, Integer> tfMap = tfm.gettermFrequencyForDoc(docid);
-
-        if (!tfMap.containsKey(s.toString())) {
+        if (!ivtContainsKey(s.toString())) {
             return 0;
         }
 
-        return tfMap.get(s.toString());
+        // Get posting list from index.
+        List<Byte> l = ivtGet(s.toString());
+        ArrayList<Integer> arr = decompressArray(l);
+
+        // Use binary search looking for docid within given posting list.
+        int pos = linearSearchPostDecompressed(docid, arr);
+
+        if (pos != -1) {
+            // Return term frequency for given doc and term
+            int count = 0;
+            while (pos < arr.size() - 1 && arr.get(pos) == docid) {
+                ++count;
+                pos += 2;
+            }
+            return count;
+        } else {
+            return 0;
+        }
     }
 
     private boolean ivtContainsKey(String key) {
