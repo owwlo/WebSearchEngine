@@ -241,4 +241,9 @@ class IndexerFullScan extends Indexer implements Serializable {
         }
         return retval;
     }
+
+    @Override
+    public Map<String, Integer> documentTermFrequencyMap(int docid) {
+        return null;
+    }
 }

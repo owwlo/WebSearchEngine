@@ -651,4 +651,9 @@ public class IndexerInvertedCompressed extends Indexer {
 
     public static void main(String args[]) {
     }
+
+    @Override
+    public Map<String, Integer> documentTermFrequencyMap(int docid) {
+        return tfm.gettermFrequencyForDoc(docid);
+    }
 }

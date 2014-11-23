@@ -547,6 +547,11 @@ public class IndexerInvertedOccurrence extends Indexer {
         return l;
     }
 
+    @Override
+    public Map<String, Integer> documentTermFrequencyMap(int docid) {
+        return tfm.gettermFrequencyForDoc(docid);
+    }
+
     public static void main(String[] args) {
     }
 }
