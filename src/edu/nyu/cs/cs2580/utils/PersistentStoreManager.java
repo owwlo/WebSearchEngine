@@ -23,6 +23,9 @@ import java.util.Set;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.serializers.MapSerializer;
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 public class PersistentStoreManager {
 
@@ -217,10 +220,8 @@ public class PersistentStoreManager {
 
         private Map<Integer, Integer> offsetMap;
 
-        private DataOutputStream datOutStream;
         private Output datOut;
-        private DataInputStream datInStream;
-        private Input datIn;
+        private RandomAccessFile raf;
 
         private File idxFile;
         private File datFile;
@@ -233,18 +234,17 @@ public class PersistentStoreManager {
             if (idxFile.exists()) {
                 offsetMap = (Map<Integer, Integer>) readObjectFromFile(idxFile);
                 try {
-                    datInStream = new DataInputStream(new BufferedInputStream(new FileInputStream(
-                            datFile)));
-                    datIn = new Input(datInStream);
+                    raf = new RandomAccessFile(datFile, "r");
                 } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             } else {
                 offsetMap = new HashMap<Integer, Integer>();
                 try {
-                    datOutStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(
-                            datFile, false)));
-                    datOut = new Output(datOutStream);
+                    datOut = new Output(new BufferedOutputStream(
+                            new FileOutputStream(datFile, false)));
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -252,29 +252,35 @@ public class PersistentStoreManager {
         }
 
         public void addTermFrequencyForDoc(int docId, Map<String, Integer> frequencyMap) {
-            int offset = datOut.position();
+            int offset = (int) datOut.total();
             kryo.writeObject(datOut, frequencyMap);
             offsetMap.put(docId, offset);
         }
 
         public Map<String, Integer> gettermFrequencyForDoc(int docid) {
             int offset = offsetMap.get(docid);
-            datIn.setPosition(offset);
-            Map<String, Integer> result = kryo.readObject(datIn, HashMap.class);
+            Map<String, Integer> result = null;
+            try {
+                raf.seek(offset);
+                Input in = new Input(new BufferedInputStream(new FileInputStream(
+                        raf.getFD())));
+                result = kryo.readObject(in, HashMap.class);
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             return result;
         }
 
         public void close() {
             writeObjectToFile(idxFile, offsetMap);
-            if(datOutStream != null) {
-                try {
-                    datOutStream.close();
-                } catch (IOException e) {
-                }
+            if (datOut != null) {
+                datOut.close();
             }
-            if(datInStream != null) {
+            if (raf != null) {
                 try {
-                    datInStream.close();
+                    raf.close();
                 } catch (IOException e) {
                 }
             }
