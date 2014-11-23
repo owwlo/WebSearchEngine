@@ -339,12 +339,15 @@ public class QueryHandler implements HttpHandler {
 			for (ScoredDocument sdoc : scoredDocs) {
 				Map<String, Integer> termInDoc = _indexer.documentTermFrequencyMap(sdoc._doc._docid);
 						//new HashMap<String, Integer>();// _indexer.getTerms(sdoc._doc._docid);
-				all_occ += termInDoc.size();
+				//all_occ += termInDoc.size();
 
 				for (Map.Entry<String, Integer> entry : termInDoc.entrySet()) {
 					String term = entry.getKey();
 					Integer occ = entry.getValue();
 
+					if (stopWords.contains(term)) continue;
+					
+					all_occ += occ;
 					if (term_map.containsKey(term)) {
 						term_map.put(term, term_map.get(term) + occ);
 					} else {
@@ -360,11 +363,9 @@ public class QueryHandler implements HttpHandler {
 			PriorityQueue<Map.Entry<String, Double>> topTerms = new PriorityQueue<Map.Entry<String, Double>>(
 					cgiArgs._numTerms, new CompareByValue());
 			for (Map.Entry<String, Double> entry : term_map.entrySet()) {
-				if (!stopWords.contains(entry)){
-					topTerms.add(entry);
-					if (topTerms.size() > cgiArgs._numTerms) {
-						topTerms.poll();
-					}
+				topTerms.add(entry);
+				if (topTerms.size() > cgiArgs._numTerms) {
+					topTerms.poll();
 				}
 			}
 			Map.Entry<String, Double>[] top_term = (Map.Entry<String, Double>[]) topTerms
