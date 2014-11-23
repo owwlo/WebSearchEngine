@@ -118,10 +118,10 @@ public class QueryHandler implements HttpHandler {
 
 	// hw3 prf: for priority queue of mapentry<term, occ>
 	private class CompareByValue implements
-			Comparator<Map.Entry<Integer, Double>> {
+			Comparator<Map.Entry<String, Double>> {
 		@Override
-		public int compare(Map.Entry<Integer, Double> lhs,
-				Map.Entry<Integer, Double> rhs) {
+		public int compare(Map.Entry<String, Double> lhs,
+				Map.Entry<String, Double> rhs) {
 			return lhs.getValue().compareTo(rhs.getValue());
 		}
 	}
@@ -155,11 +155,11 @@ public class QueryHandler implements HttpHandler {
 	}
 
 	// hw3 prf: query representation output
-	private void constructTermOutput(final Map.Entry<Integer, Double>[] terms,
+	private void constructTermOutput(final Map.Entry<String, Double>[] terms,
 			StringBuffer response) {
 		for (int i = terms.length - 1; i >= 0; ++i) {
 			response.append(response.length() > 0 ? "\n" : "");
-			response.append(terms[i].getKey() + "\t" + terms[i].getValue()); // _indexer.getTermByInt(terms[i].getKey())
+			response.append(terms[i].getKey() + "\t" + terms[i].getValue());
 		}
 		response.append(response.length() > 0 ? "\n" : "");
 	}
@@ -318,15 +318,16 @@ public class QueryHandler implements HttpHandler {
 			StringBuffer response = new StringBuffer();
 
 			// get all the doc, generate a map: term->occ(prob) in all docs
-			Map<Integer, Double> term_map = new HashMap<Integer, Double>();
+			Map<String, Double> term_map = new HashMap<String, Double>();
 			int all_occ = 0; // all term occ in all k docs
 			// aggregate over k documents
 			for (ScoredDocument sdoc : scoredDocs) {
-				Map<Integer, Integer> termInDoc = new HashMap<Integer, Integer>();// _indexer.getTerms(sdoc._doc._docid);
+				Map<String, Integer> termInDoc = _indexer.documentTermFrequencyMap(sdoc._doc._docid);
+						//new HashMap<String, Integer>();// _indexer.getTerms(sdoc._doc._docid);
 				all_occ += termInDoc.size();
 
-				for (Map.Entry<Integer, Integer> entry : termInDoc.entrySet()) {
-					Integer term = entry.getKey();
+				for (Map.Entry<String, Integer> entry : termInDoc.entrySet()) {
+					String term = entry.getKey();
 					Integer occ = entry.getValue();
 
 					if (term_map.containsKey(term)) {
@@ -341,21 +342,21 @@ public class QueryHandler implements HttpHandler {
 			}
 
 			// get the top m terms in ascending order
-			PriorityQueue<Map.Entry<Integer, Double>> topTerms = new PriorityQueue<Map.Entry<Integer, Double>>(
+			PriorityQueue<Map.Entry<String, Double>> topTerms = new PriorityQueue<Map.Entry<String, Double>>(
 					cgiArgs._numTerms, new CompareByValue());
-			for (Map.Entry<Integer, Double> entry : term_map.entrySet()) {
+			for (Map.Entry<String, Double> entry : term_map.entrySet()) {
 				topTerms.add(entry);
 				if (topTerms.size() > cgiArgs._numTerms) {
 					topTerms.poll();
 				}
 			}
-			Map.Entry<Integer, Double>[] top_term = (Map.Entry<Integer, Double>[]) topTerms
+			Map.Entry<String, Double>[] top_term = (Map.Entry<String, Double>[]) topTerms
 					.toArray();
 			Arrays.sort(top_term);
 
 			// divide by denominator
 			double sum = 0.0;
-			for (Map.Entry<Integer, Double> e : top_term) {
+			for (Map.Entry<String, Double> e : top_term) {
 				double prob = e.getValue() / all_occ;
 				e.setValue(prob);
 				sum += prob;
@@ -367,7 +368,7 @@ public class QueryHandler implements HttpHandler {
 			}
 
 			// normalize
-			for (Map.Entry<Integer, Double> e : top_term) {
+			for (Map.Entry<String, Double> e : top_term) {
 				e.setValue(e.getValue() / sum);
 			}
 
