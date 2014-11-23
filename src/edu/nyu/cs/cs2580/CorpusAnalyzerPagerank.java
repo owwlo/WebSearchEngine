@@ -1,7 +1,10 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -175,8 +178,19 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
    * @throws IOException
    */
   @Override
-  public Object load() throws IOException {
-    System.out.println("Loading using " + this.getClass().getName());
-    return null;
-  }
+	public Object load() throws IOException {
+		System.out.println("Loading using " + this.getClass().getName());
+		FileInputStream fis = new FileInputStream(_options._indexPrefix
+				+ "/PR.index");
+		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+		String line = null;
+		Map<String, Double> pageRank = new HashMap<String, Double>();
+		while ((line = br.readLine()) != null) {
+          String[] splits=line.split(" ");
+          double val = Double.valueOf(splits[1]);
+          pageRank.put(splits[0], val);
+		}
+		br.close();
+		return pageRank;
+	}
 }
