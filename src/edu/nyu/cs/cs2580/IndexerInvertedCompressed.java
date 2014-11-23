@@ -14,25 +14,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager.IvtMapByte;
+import edu.nyu.cs.cs2580.utils.PersistentStoreManager.TermFrequencyManager;
 
 /**
  * @CS2580: Implement this class for HW2.
  */
 public class IndexerInvertedCompressed extends Indexer {
     private List<IvtMapByte> ivtIndexMapList = new ArrayList<IvtMapByte>();
-
-    // for compressed posting list
-    private Map<String, List<Byte>> compressedPL = new HashMap<String, List<Byte>>();
-    // for record in query
-    private String currTerm; // current query term
-    private Map<Integer, Integer> currPL; // current posting list: <docid,
-    // counts>
 
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, Integer> docUrlMap = null;
@@ -42,6 +35,8 @@ public class IndexerInvertedCompressed extends Indexer {
     private static final String DOC_IDX_TBL = "docDB";
     private static final String DOC_INFO_TBL = "docInfoDB";
     private static final String DOC_URL_TBL = "docUrlDB";
+
+    private TermFrequencyManager tfm;
 
     private List<File> getAllFiles(final File folder) {
         List<File> fileList = new LinkedList<File>();
@@ -83,14 +78,14 @@ public class IndexerInvertedCompressed extends Indexer {
             for (int docId = startFileIdx; docId < endFileIdx; docId++) {
                 File file = files.get(docId);
                 Map<String, List<Integer>> ivtMapItem = new HashMap<String, List<Integer>>();
+                Map<String, Integer> ferqMap = new HashMap<String, Integer>();
 
-                String htmlStr = null;
+                org.jsoup.nodes.Document doc;
                 try {
-                    htmlStr = FileUtils.readFileToString(file);
-                } catch (IOException e) {
+                    doc = Jsoup.parse(file, "UTF-8");
+                } catch (IOException e1) {
                     continue;
                 }
-                org.jsoup.nodes.Document doc = Jsoup.parse(htmlStr);
 
                 String title = doc.title();
                 String text = doc.text();
@@ -105,15 +100,16 @@ public class IndexerInvertedCompressed extends Indexer {
                     s.add(token.toCharArray(), token.length());
                     s.stem();
 
-                    // Build inverted map.
-                    // for each token in each doc, add <token, occurrence> to
-                    // the
-                    // map of <token, {occurrence list}> for each document
                     token = s.toString();
 
                     if (token.length() < 1 || token.length() > 20) {
                         continue;
                     }
+
+                    if (!ferqMap.containsKey(token)) {
+                        ferqMap.put(token, 0);
+                    }
+                    ferqMap.put(token, ferqMap.get(token) + 1);
 
                     if (!ivtMapItem.containsKey(token)) {
                         ArrayList<Integer> occList = new ArrayList<Integer>();
@@ -126,6 +122,8 @@ public class IndexerInvertedCompressed extends Indexer {
                 }
 
                 termCount += passageLength;
+
+                tfm.addTermFrequencyForDoc(docId, ferqMap);
 
                 String url = null;
                 try {
@@ -198,6 +196,8 @@ public class IndexerInvertedCompressed extends Indexer {
 
         long termCount = 0;
 
+        tfm = new TermFrequencyManager(_options._indexPrefix);
+
         for (int batchNum = 0; batchNum < files.size() / filesPerBatch + 1; batchNum++) {
             int fileIdStart = batchNum * filesPerBatch;
             int fileIdEnd = (batchNum + 1) * filesPerBatch;
@@ -246,9 +246,6 @@ public class IndexerInvertedCompressed extends Indexer {
                     + " pages have been processed. Elapsed: "
                     + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
 
-            // Write ivtMap into storage.
-            long recordsCommit = 0;
-
             System.out.println("Writing Inverted Map to disk. " + fileIdEnd
                     + " pages have been processed. Elapsed: "
                     + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
@@ -263,6 +260,8 @@ public class IndexerInvertedCompressed extends Indexer {
         infoMap.put("_totalTermFrequency", termCount);
 
         storeVariables();
+
+        tfm.close();
 
         long end_t = System.currentTimeMillis();
 
@@ -309,6 +308,8 @@ public class IndexerInvertedCompressed extends Indexer {
 
     @Override
     public void loadIndex() throws IOException, ClassNotFoundException {
+        tfm = new TermFrequencyManager(_options._indexPrefix);
+
         for (int i = 0; i < 100; i++) {
             File file = new File(_options._indexPrefix, "ivt" + i);
             if (!file.exists()) {
@@ -355,7 +356,6 @@ public class IndexerInvertedCompressed extends Indexer {
 
     private static int next(int docId,
             Vector<Vector<List<Integer>>> postinglists) {
-        int[] docIds = new int[postinglists.size()];
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
@@ -442,7 +442,6 @@ public class IndexerInvertedCompressed extends Indexer {
 
     private static int nextForOccurence(int docId,
             Vector<List<Integer>> postinglists) {
-        int[] docIds = new int[postinglists.size()];
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
@@ -547,97 +546,20 @@ public class IndexerInvertedCompressed extends Indexer {
         return result / 2;
     }
 
-    /**
-     * @CS2580: Implement this for bonus points.
-     */
-
-    // do linear search of a docid for compressed posting list, first occurrence
-    private int linearSearchPostList(final int docId, final List<Byte> list) {
-        int i = 0;
-        int pos = -1;
-        while (i < list.size()) {
-            pos = i;
-            ArrayList<Byte> code = new ArrayList<Byte>();
-            byte currByte = list.get(i);
-            while ((currByte & 0x80) == (byte) 0) {
-                code.add(currByte);
-                i++;
-                if (i >= list.size()) {
-                    return -1;
-                } else {
-                    currByte = list.get(i);
-                }
-            }
-            code.add(currByte);
-            i++;
-
-            if (decompressBytes(code) == docId) {
-                return pos;
-            }
-
-            if (i >= list.size()) {
-                return -1;
-            }
-            while ((list.get(i) & 0x80) == (byte) 0) {
-                i++;
-                if (i >= list.size()) {
-                    return -1;
-                }
-            }
-            i++;
-        }
-        return -1;
-    }
-
-    // do linear search of a docid for compressed posting list, first occurrence
-    private int linearSearchPostDecompressed(final int docId, final List<Integer> list) {
-        int i = 0;
-        int pos = -1;
-        while (i < list.size()) {
-            pos = i;
-
-            if (list.get(i) == docId) {
-                return pos;
-            }
-            i++; //skip the occurrence
-            i++; // go to the next docid
-        }
-        return -1;
-    }
-
     @Override
     public int documentTermFrequency(String term, int docid) {
-        return docid;
-//        // Get docid for specific url.
-//        int docid = docUrlMap.get(url);
-//
-//        // Stem given term.
-//        Stemmer s = new Stemmer();
-//        s.add(term.toLowerCase().toCharArray(), term.length());
-//        s.stem();
-//
-//        if (!ivtContainsKey(s.toString())) {
-//            return 0;
-//        }
-//
-//        // Get posting list from index.
-//        List<Byte> l = ivtGet(s.toString());
-//        ArrayList<Integer> arr = decompressArray(l);
-//
-//        // Use binary search looking for docid within given posting list.
-//        int pos = linearSearchPostDecompressed(docid, arr);
-//
-//        if (pos != -1) {
-//            // Return term frequency for given doc and term
-//            int count = 0;
-//            while (pos < arr.size() - 1 && arr.get(pos) == docid) {
-//                ++count;
-//                pos += 2;
-//            }
-//            return count;
-//        } else {
-//            return 0;
-//        }
+        // Stem given term.
+        Stemmer s = new Stemmer();
+        s.add(term.toLowerCase().toCharArray(), term.length());
+        s.stem();
+
+        Map<String, Integer> tfMap = tfm.gettermFrequencyForDoc(docid);
+
+        if (!tfMap.containsKey(s.toString())) {
+            return 0;
+        }
+
+        return tfMap.get(s.toString());
     }
 
     private boolean ivtContainsKey(String key) {
@@ -728,16 +650,5 @@ public class IndexerInvertedCompressed extends Indexer {
     }
 
     public static void main(String args[]) {
-        ArrayList<Byte> codes = new ArrayList<Byte>();
-        ArrayList<Byte> a1 = compressInt(1000234567);
-        codes.addAll(a1);
-        ArrayList<Byte> a2 = compressInt(1000);
-        codes.addAll(a2);
-        ArrayList<Byte> a3 = compressInt(67);
-        codes.addAll(a3);
-        ArrayList<Byte> a4 = compressInt(10002345);
-        codes.addAll(a4);
-        ArrayList<Integer> b = decompressArray(codes);
-        System.out.println(codes + "->" + b);
     }
 }

@@ -14,19 +14,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.owwlo.InvertedIndexing.InvertedIndexBuilder;
 import org.owwlo.InvertedIndexing.InvertedIndexBuilder.IvtMapInteger;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
+import edu.nyu.cs.cs2580.utils.PersistentStoreManager.TermFrequencyManager;
 
 /**
  * @CS2580: Implement this class for HW2.
  */
 public class IndexerInvertedDoconly extends Indexer {
     private List<IvtMapInteger> ivtIndexMapList = new ArrayList<IvtMapInteger>();
+
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, Integer> docUrlMap = null;
     private Map<String, Object> infoMap = null;
@@ -35,6 +36,8 @@ public class IndexerInvertedDoconly extends Indexer {
     private static final String DOC_IDX_TBL = "docDB";
     private static final String DOC_URL_TBL = "docUrlDB";
     private static final String DOC_INFO_TBL = "docInfoDB";
+
+    private TermFrequencyManager tfm;
 
     public IndexerInvertedDoconly(Options options) {
         super(options);
@@ -83,14 +86,14 @@ public class IndexerInvertedDoconly extends Indexer {
             for (int docId = startFileIdx; docId < endFileIdx; docId++) {
                 File file = files.get(docId);
                 Map<String, Integer> ivtMapItem = new HashMap<String, Integer>();
+                Map<String, Integer> ferqMap = new HashMap<String, Integer>();
 
-                String htmlStr = null;
+                org.jsoup.nodes.Document doc;
                 try {
-                    htmlStr = FileUtils.readFileToString(file);
-                } catch (IOException e) {
+                    doc = Jsoup.parse(file, "UTF-8");
+                } catch (IOException e1) {
                     continue;
                 }
-                org.jsoup.nodes.Document doc = Jsoup.parse(htmlStr);
 
                 String title = doc.title();
                 String text = doc.text();
@@ -110,6 +113,11 @@ public class IndexerInvertedDoconly extends Indexer {
                         continue;
                     }
 
+                    if (!ferqMap.containsKey(token)) {
+                        ferqMap.put(token, 0);
+                    }
+                    ferqMap.put(token, ferqMap.get(token) + 1);
+
                     if (!ivtMapItem.containsKey(token)) {
                         ivtMapItem.put(token, 0);
                     }
@@ -118,6 +126,8 @@ public class IndexerInvertedDoconly extends Indexer {
                 }
 
                 termCount += passageLength;
+
+                tfm.addTermFrequencyForDoc(docId, ferqMap);
 
                 String url = null;
                 try {
@@ -172,6 +182,8 @@ public class IndexerInvertedDoconly extends Indexer {
 
         InvertedIndexBuilder builder = InvertedIndexBuilder.getBuilder(new File(
                 _options._indexPrefix));
+
+        tfm = new TermFrequencyManager(_options._indexPrefix);
 
         int filesPerBatch = 2000;
 
@@ -229,6 +241,7 @@ public class IndexerInvertedDoconly extends Indexer {
         storeVariables();
 
         builder.close();
+        tfm.close();
 
         long end_t = System.currentTimeMillis();
 
@@ -274,6 +287,9 @@ public class IndexerInvertedDoconly extends Indexer {
     public void loadIndex() throws IOException, ClassNotFoundException {
         InvertedIndexBuilder builder = InvertedIndexBuilder.getBuilder(new File(
                 _options._indexPrefix));
+
+        tfm = new TermFrequencyManager(_options._indexPrefix);
+
         IvtMapInteger ivtMapBatch = builder.getUnifiedDistributedIvtiIntegerMap();
         ivtIndexMapList.add(ivtMapBatch);
         readVariables();
@@ -308,7 +324,6 @@ public class IndexerInvertedDoconly extends Indexer {
     }
 
     public static int next(int docId, Vector<List<Integer>> postinglists) {
-        int[] docIds = new int[postinglists.size()];
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
@@ -395,66 +410,20 @@ public class IndexerInvertedDoconly extends Indexer {
         return result;
     }
 
-    private static int bsInner(final int start, final int end, final int docid,
-            final List<Integer> list) {
-        /*
-         * if (end - start <= 1) { return -1; } int chk = start / 2 + end / 2;
-         * if (chk % 2 == 1) { return -1; } if (list.get(chk) > docid) { return
-         * bsInner(start, chk, docid, list); } else if (list.get(chk) < docid) {
-         * return bsInner(chk, end, docid, list); }
-         */
-        int Start = start;
-        int End = end;
-        while (Start <= End) {
-            int mid = (Start + End) / 2;
-            if (docid == list.get(2 * mid))
-                return (2 * mid);
-            if (docid < list.get(2 * mid))
-                End = mid - 1;
-            else
-                Start = mid + 1;
-            // System.out.println("Start is: "+Start+"End is :"+End);
-        }
-        return -1;
-    }
-
-    private int binarySearchPostList(final int docId, final List<Integer> list) {
-        // return bsInner(0, list.size() - 1, docId, list);
-        // Modification:
-        return bsInner(0, list.size() / 2 - 1, docId, list);
-    }
-
     @Override
     public int documentTermFrequency(String term, int docid) {
-        return 0;
-//        // Get docid for specific url.
-//        int docid = docUrlMap.get(url);
-//
-//        // Stem given term.
-//        Stemmer s = new Stemmer();
-//        s.add(term.toLowerCase().toCharArray(), term.length());
-//        s.stem();
-//
-//        if (!ivtContainsKey(s.toString())) {
-//            return 0;
-//        }
-//        // Get posting list from index.
-//        List<Integer> l = ivtGet(s.toString());
-//
-//        // Use binary search looking for docid within given posting list.
-//        int pos = binarySearchPostList(docid, l);
-//        /*
-//         * if (docid==637){ System.out.println("i am at 637");
-//         * System.out.println("position is:"+l.get(pos+1)); for (int
-//         * i=0;i<l.size();i++) System.out.printf(" "+l.get(i)+" "); }
-//         */
-//        if (pos != -1) {
-//            // Return term frequency for given doc and term
-//            // System.out.println("current num is: "+l.get(pos+1));
-//            return l.get(pos + 1);
-//        } else {
-//            return 0;
-//        }
+        // Stem given term.
+        Stemmer s = new Stemmer();
+        s.add(term.toLowerCase().toCharArray(), term.length());
+        s.stem();
+
+        Map<String, Integer> tfMap = tfm.gettermFrequencyForDoc(docid);
+
+        if (!tfMap.containsKey(s.toString())) {
+            return 0;
+        }
+
+        return tfMap.get(s.toString());
     }
 
     private boolean ivtContainsKey(String key) {
@@ -486,26 +455,5 @@ public class IndexerInvertedDoconly extends Indexer {
     }
 
     public static void main(String[] args) {
-        /*
-         * int[] first={1,1,2,1,5,1,7,1,8,1}; int[] second={3,1,4,1,8,1}; int[]
-         * third={8,2,9,3}; ArrayList<Integer> firstA=new ArrayList<Integer> ();
-         * ArrayList<Integer> secondA=new ArrayList<Integer> ();
-         * ArrayList<Integer> thirdA=new ArrayList<Integer> (); for (int
-         * i=0;i<first.length;i++) firstA.add(first[i]); for (int
-         * i=0;i<second.length;i++) secondA.add(second[i]); for (int
-         * i=0;i<third.length;i++) thirdA.add(third[i]); Vector<List<Integer>>
-         * posting=new Vector<List<Integer>> (); posting.add(firstA);
-         * posting.add(secondA); posting.add(thirdA); int k=next(-1,posting);
-         * //int k=nextForOne(7,firstA); System.out.println(k);
-         */
-        int docId = 8;
-        int[] first = {
-                1, 1, 2, 1, 5, 4, 7, 1, 8, 1
-        };
-        ArrayList<Integer> firstA = new ArrayList<Integer>();
-        for (int i = 0; i < first.length; i++)
-            firstA.add(first[i]);
-        System.out.println("result is: " + bsInner(0, firstA.size() / 2 - 1, docId, firstA));
     }
-
 }

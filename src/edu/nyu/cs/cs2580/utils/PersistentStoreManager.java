@@ -1,7 +1,9 @@
 
 package edu.nyu.cs.cs2580.utils;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 public class PersistentStoreManager {
 
@@ -43,166 +49,6 @@ public class PersistentStoreManager {
             oos.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    public static class IvtMap implements Map<String, List<Integer>> {
-        private Map<String, Integer> ivtOffset;
-        private DataOutputStream postListOut;
-        private RandomAccessFile postListIn;
-        private File idxFile;
-        private boolean isNew;
-
-        public IvtMap(File dir, String mapName, boolean isNew) {
-            this.isNew = isNew;
-            idxFile = new File(dir, mapName + ".idx");
-            File file = new File(dir, mapName);
-            if (isNew) {
-                createNewMap(file, mapName);
-            } else {
-                loadMap(file, mapName);
-            }
-        }
-
-        private void loadMap(File file, String mapName) {
-            try {
-                postListIn = new RandomAccessFile(file, "r");
-
-                FileInputStream streamIn = new FileInputStream(idxFile);
-                ObjectInputStream objectinputstream = new ObjectInputStream(streamIn);
-                ivtOffset = (Map<String, Integer>) objectinputstream.readObject();
-                streamIn.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void createNewMap(File file, String mapName) {
-            try {
-                postListOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(
-                        file, false)));
-                postListIn = new RandomAccessFile(file, "r");
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            ivtOffset = new HashMap<String, Integer>();
-        }
-
-        @Override
-        public void clear() {
-        }
-
-        @Override
-        public boolean containsKey(Object key) {
-            return ivtOffset.containsKey(key);
-        }
-
-        @Override
-        public boolean containsValue(Object value) {
-            return false;
-        }
-
-        @Override
-        public Set<java.util.Map.Entry<String, List<Integer>>> entrySet() {
-            return null;
-        }
-
-        @Override
-        public List<Integer> get(Object key) {
-            int offset = ivtOffset.get(key);
-            List<Integer> result = new ArrayList<Integer>();
-            try {
-                postListIn.seek(offset);
-                int size = postListIn.readInt();
-                for (int i = 0; i < size; i++) {
-                    result.add(postListIn.readInt());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return result;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return ivtOffset.isEmpty();
-        }
-
-        @Override
-        public Set<String> keySet() {
-            return ivtOffset.keySet();
-        }
-
-        @Override
-        synchronized public List<Integer> put(String key, List<Integer> value) {
-            int offset = postListOut.size();
-            int size = value.size();
-            ivtOffset.put(key, offset);
-            try {
-                postListOut.writeInt(size);
-                for (int integer : value) {
-                    postListOut.writeInt(integer);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return value;
-        }
-
-        @Override
-        public void putAll(Map<? extends String, ? extends List<Integer>> m) {
-            for (String key : m.keySet()) {
-                this.put(key, m.get(key));
-            }
-        }
-
-        @Override
-        public List<Integer> remove(Object key) {
-            return null;
-        }
-
-        @Override
-        public int size() {
-            return ivtOffset.size();
-        }
-
-        @Override
-        public Collection<List<Integer>> values() {
-            return null;
-        }
-
-        public void close() {
-            try {
-                if (isNew) {
-                    storeIndex();
-                    postListOut.flush();
-                    postListOut.close();
-                } else {
-                    postListIn.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void storeIndex() {
-            try {
-                FileOutputStream fout = new FileOutputStream(idxFile);
-                ObjectOutputStream oos = new ObjectOutputStream(fout);
-                oos.writeObject(ivtOffset);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        protected void finalize() throws Throwable {
-            super.finalize();
-            this.close();
         }
     }
 
@@ -362,6 +208,76 @@ public class PersistentStoreManager {
         protected void finalize() throws Throwable {
             super.finalize();
             this.close();
+        }
+    }
+
+    public static class TermFrequencyManager {
+        private final String IDX_FILE_NAME = "tfm.idx";
+        private final String DAT_FILE_NAME = "tfm.dat";
+
+        private Map<Integer, Integer> offsetMap;
+
+        private DataOutputStream datOutStream;
+        private Output datOut;
+        private DataInputStream datInStream;
+        private Input datIn;
+
+        private File idxFile;
+        private File datFile;
+
+        private Kryo kryo = new Kryo();
+
+        public TermFrequencyManager(String basePath) {
+            idxFile = new File(basePath, IDX_FILE_NAME);
+            datFile = new File(basePath, DAT_FILE_NAME);
+            if (idxFile.exists()) {
+                offsetMap = (Map<Integer, Integer>) readObjectFromFile(idxFile);
+                try {
+                    datInStream = new DataInputStream(new BufferedInputStream(new FileInputStream(
+                            datFile)));
+                    datIn = new Input(datInStream);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                offsetMap = new HashMap<Integer, Integer>();
+                try {
+                    datOutStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(
+                            datFile, false)));
+                    datOut = new Output(datOutStream);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void addTermFrequencyForDoc(int docId, Map<String, Integer> frequencyMap) {
+            int offset = datOut.position();
+            kryo.writeObject(datOut, frequencyMap);
+            offsetMap.put(docId, offset);
+        }
+
+        public Map<String, Integer> gettermFrequencyForDoc(int docid) {
+            int offset = offsetMap.get(docid);
+            datIn.setPosition(offset);
+            Map<String, Integer> result = kryo.readObject(datIn, HashMap.class);
+            return result;
+        }
+
+        public void close() {
+            writeObjectToFile(idxFile, offsetMap);
+            if(datOutStream != null) {
+                try {
+                    datOutStream.close();
+                } catch (IOException e) {
+                }
+            }
+            if(datInStream != null) {
+                try {
+                    datInStream.close();
+                } catch (IOException e) {
+                }
+            }
         }
     }
 }
