@@ -262,10 +262,8 @@ public class PersistentStoreManager {
             Map<String, Integer> result = null;
             try {
                 raf.seek(offset);
-                Input in = new Input(new BufferedInputStream(new FileInputStream(
-                        raf.getFD())));
-                result = kryo.readObject(in, HashMap.class);
-                in.close();
+                result = kryo.readObject(new Input(new BufferedInputStream(new FileInputStream(
+                        raf.getFD()))), HashMap.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
