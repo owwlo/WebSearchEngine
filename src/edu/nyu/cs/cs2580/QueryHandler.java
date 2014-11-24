@@ -43,20 +43,31 @@ public class QueryHandler implements HttpHandler {
 	 * which Ranker to use and what output format to adopt. For simplicity, all
 	 * arguments are publicly accessible.
 	 */
-	public static Set<String> stopWords = new HashSet<String>(Arrays.asList(new String[]{
-			"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours",
-			"yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers",
-			"herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves",
-			"what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are",
-			"was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does",
-			"did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until",
-			"while", "of", "at", "by", "for", "with", "about", "against", "between", "into",
-			"through", "during", "before", "after", "above", "below", "to", "from", "up", "down",
-			"in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here",
-			"there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more",
-			"most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so",
-			"than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"
-	}));
+	public static Set<String> stopWords = new HashSet<String>(
+			Arrays.asList(new String[] {
+					// from nltk
+					"i", "me", "my", "myself", "we", "our", "ours",
+					"ourselves", "you", "your", "yours", "yourself",
+					"yourselves", "he", "him", "his", "himself", "she", "her",
+					"hers", "herself", "it", "its", "itself", "they", "them",
+					"their", "theirs", "themselves", "what", "which", "who",
+					"whom", "this", "that", "these", "those", "am", "is",
+					"are", "was", "were", "be", "been", "being", "have", "has",
+					"had", "having", "do", "does", "did", "doing", "a", "an",
+					"the", "and", "but", "if", "or", "because", "as", "until",
+					"while", "of", "at", "by", "for", "with", "about",
+					"against", "between", "into", "through", "during",
+					"before", "after", "above", "below", "to", "from", "up",
+					"down", "in", "out", "on", "off", "over", "under", "again",
+					"further", "then", "once", "here", "there", "when",
+					"where", "why", "how", "all", "any", "both", "each", "few",
+					"more", "most", "other", "some", "such", "no", "nor",
+					"not", "only", "own", "same", "so", "than", "too", "very",
+					"s", "t", "can", "will", "just", "don", "should", "now",
+					// from statistics
+					"many", "\"the", "?", "1", "b", "&", "", "wikipedia",
+					"also", "[edit]", "^" }));
+
 	public static class CgiArguments {
 		// The raw user query
 		public String _query = "";
@@ -171,14 +182,12 @@ public class QueryHandler implements HttpHandler {
 	}
 
 	// hw3 prf: query representation output
-	private void constructTermOutput(final ArrayList<Pair<String, Double>> terms,
-			StringBuffer response) {
+	private void constructTermOutput(
+			final ArrayList<Pair<String, Double>> terms, StringBuffer response) {
 		for (int i = terms.size() - 1; i >= 0; --i) {
-			response.append(response.length() > 0 ? "\n" : "");
 			Pair<String, Double> p = terms.get(i);
-			response.append(p.first + "\t" + p.second);
+			response.append(p.first + "\t" + p.second + "\n");
 		}
-		response.append(response.length() > 0 ? "\n" : "");
 	}
 
 	public static Map<String, String> getQueryMap(String query) {
@@ -332,28 +341,29 @@ public class QueryHandler implements HttpHandler {
 			// Ranking.
 			Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery,
 					cgiArgs._numDocs);
+			// System.out.println("get scoredDocs size "+scoredDocs.size());
 			StringBuffer response = new StringBuffer();
 
 			// get all the doc, generate a map: term->occ(prob) in all docs
 			Map<String, Double> term_map = new HashMap<String, Double>();
 			int all_occ = 0; // all term occ in all k docs
+
 			// aggregate over k documents
-			
-			//	System.out.println("get scoredDocs size "+scoredDocs.size());
 			for (ScoredDocument sdoc : scoredDocs) {
-				Map<String, Integer> termInDoc = _indexer.documentTermFrequencyMap(sdoc._doc._docid);
-						//new HashMap<String, Integer>();// _indexer.getTerms(sdoc._doc._docid);
-				
+				// map of terms in a certain doc
+				Map<String, Integer> termInDoc = _indexer
+						.documentTermFrequencyMap(sdoc._doc._docid);
 				// System.out.println("get empty term set???:"+termInDoc.size());
+
 				for (Map.Entry<String, Integer> entry : termInDoc.entrySet()) {
 					String term = entry.getKey();
 					Integer occ = entry.getValue();
 
-					if (stopWords.contains(term)) {
-					//	System.out.println("get a stopword "+term);
-						continue;
-					}
-					
+					/*
+					 * if (stopWords.contains(term)) { //
+					 * System.out.println("get a stopword "+term); continue; }
+					 */
+
 					// System.out.println("term:occ:"+term+":"+occ);
 					all_occ += occ;
 					if (term_map.containsKey(term)) {
@@ -371,13 +381,18 @@ public class QueryHandler implements HttpHandler {
 			PriorityQueue<Map.Entry<String, Double>> topTerms = new PriorityQueue<Map.Entry<String, Double>>(
 					cgiArgs._numTerms, new CompareByValue());
 			for (Map.Entry<String, Double> entry : term_map.entrySet()) {
+				if (stopWords.contains(entry.getKey()))
+					continue;
+
 				topTerms.add(entry);
 				if (topTerms.size() > cgiArgs._numTerms) {
 					topTerms.poll();
 				}
 			}
+
+			// put the top m terms in a stable data structure
 			ArrayList<Pair<String, Double>> top_term = new ArrayList<Pair<String, Double>>();
-			while (topTerms.size() > 0){
+			while (topTerms.size() > 0) {
 				top_term.add(new Pair<String, Double>(topTerms.poll()));
 			}
 
