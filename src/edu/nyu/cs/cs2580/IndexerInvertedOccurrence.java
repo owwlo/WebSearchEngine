@@ -471,18 +471,8 @@ public class IndexerInvertedOccurrence extends Indexer {
         int result = -1;
         if (canUseCache(query, docid) == false)
         {
-            previousQuery = query._query;
-            previousDocid = -1;
-            cachePos = new Vector<Vector<Integer>>();
-            for (int i = 0; i < postingLists.size(); i++) {
-                Vector<Integer> tempVec = new Vector<Integer>();
-                int size = postingLists.get(i).size();
-                for (int j = 0; j < size; j++)
-                    tempVec.add(0);
-                cachePos.add(tempVec);
-            }
-            postingLists = new Vector<Vector<List<Integer>>>();
-            for (int i = 0; i < tokens.size(); i++) {
+        	   postingLists = new Vector<Vector<List<Integer>>>();
+        	   for (int i = 0; i < tokens.size(); i++) {
                 Vector<List<Integer>> container = new Vector<List<Integer>>();
                 String[] consecutiveWords = tokens.get(i).split(" ");
                 for (int j = 0; j < consecutiveWords.length; j++) {
@@ -495,6 +485,30 @@ public class IndexerInvertedOccurrence extends Indexer {
                 // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
                 postingLists.add(container);
             }
+            previousQuery = query._query;
+            previousDocid = -1;
+            cachePos = new Vector<Vector<Integer>>();
+            for (int i = 0; i < postingLists.size(); i++) {
+                Vector<Integer> tempVec = new Vector<Integer>();
+                int size = postingLists.get(i).size();
+                for (int j = 0; j < size; j++)
+                    tempVec.add(0);
+                cachePos.add(tempVec);
+            }
+            /*postingLists = new Vector<Vector<List<Integer>>>();
+            for (int i = 0; i < tokens.size(); i++) {
+                Vector<List<Integer>> container = new Vector<List<Integer>>();
+                String[] consecutiveWords = tokens.get(i).split(" ");
+                for (int j = 0; j < consecutiveWords.length; j++) {
+                    Stemmer s = new Stemmer();
+                    s.add(consecutiveWords[j].toLowerCase().toCharArray(),
+                            consecutiveWords[j].length());
+                    s.stem();
+                    container.add(ivtGet(s.toString()));
+                }
+                // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
+                postingLists.add(container);
+            }*/
         }
         /*
          * for (int i = 0; i < tokens.size(); i++) { Vector<List<Integer>>
