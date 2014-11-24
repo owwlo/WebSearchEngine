@@ -79,7 +79,7 @@ public class LogMinerNumviews extends LogMiner {
 		if (indexDic.exists()==false)
 			indexDic.mkdir();
 		//Write to files
-		String des=_options._indexPrefix+"/numView.index";
+		String des=_options._indexPrefix+"/../numView.index";
 		PrintWriter writer = new PrintWriter(des,"UTF-8");
 		for (String key:indexDocs.keySet()){
 			
@@ -102,7 +102,7 @@ public class LogMinerNumviews extends LogMiner {
 	public Object load() throws IOException {
 		System.out.println("Loading using " + this.getClass().getName());
 		FileInputStream fis = new FileInputStream(_options._indexPrefix
-				+ "/numView.index");
+				+ "/../numView.index");
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		String line = null;
 		Map<String, Double> numView = new HashMap<String, Double>();

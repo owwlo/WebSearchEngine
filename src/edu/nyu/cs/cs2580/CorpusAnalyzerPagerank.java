@@ -155,7 +155,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
         if (indexDic.exists()==false)
             indexDic.mkdir();
         //Write to files
-        String des=_options._indexPrefix+"/PR.index";
+        String des=_options._indexPrefix+"/../PR.index";
         PrintWriter writer = new PrintWriter(des,"UTF-8");
         for (String key:indexDocs.keySet()){
             if (indexDocs.containsKey(key+".html")==true){
@@ -181,7 +181,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 	public Object load() throws IOException {
 		System.out.println("Loading using " + this.getClass().getName());
 		FileInputStream fis = new FileInputStream(_options._indexPrefix
-				+ "/PR.index");
+				+ "/../PR.index");
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		String line = null;
 		Map<String, Double> pageRank = new HashMap<String, Double>();

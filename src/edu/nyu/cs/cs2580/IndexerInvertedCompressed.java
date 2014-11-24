@@ -125,12 +125,7 @@ public class IndexerInvertedCompressed extends Indexer {
 
                 tfm.addTermFrequencyForDoc(docId, ferqMap);
 
-                String url = null;
-                try {
-                    url = file.getCanonicalPath();
-                } catch (IOException e) {
-                    continue;
-                }
+                String url = file.getName();
 
                 DocumentIndexed di = new DocumentIndexed(docId);
                 di.setTitle(title);
@@ -259,9 +254,25 @@ public class IndexerInvertedCompressed extends Indexer {
 
         infoMap.put("_totalTermFrequency", termCount);
 
-        storeVariables();
-
         tfm.close();
+
+        CorpusAnalyzer ca = new CorpusAnalyzerPagerank(_options);
+        LogMiner lm = new LogMinerNumviews(_options);
+        Map<String, Double> pageRankMap = (Map<String, Double>) ca.load();
+        Map<String, Double> numViewsMap = (Map<String, Double>) lm.load();
+        
+        for(Map.Entry<Integer, DocumentIndexed> die : docMap.entrySet()) {
+            int docid = die.getKey();
+            DocumentIndexed di = die.getValue();
+            String basename = di.getUrl();
+            di.setPageRank((float)(double)pageRankMap.get(basename));
+            di.setNumViews((int)(double)numViewsMap.get(basename));
+            
+            //System.out.println(basename + " " + pageRankMap.get(basename) + " "
+            //        + numViewsMap.get(basename));
+        }
+
+        storeVariables();
 
         long end_t = System.currentTimeMillis();
 
