@@ -340,13 +340,13 @@ public class IndexerInvertedCompressed extends Indexer {
     /**
      * In HW2, you should be using {@link DocumentIndexed}
      */
-    private static String previousQuery=new String();
-    private static int previousDocid=-1;
-    private static Vector<Vector<Integer>> cachePos=new Vector<Vector<Integer>> ();
+    private  String previousQuery=new String();
+    private  int previousDocid=-1;
+    private  Vector<Vector<Integer>> cachePos=new Vector<Vector<Integer>> ();
     
     
     
-    private static int nextInOccurence(int docId, List<Integer> postinglist,int phraseIndex,int termIndex) {
+    private  int nextInOccurence(int docId, List<Integer> postinglist,int phraseIndex,int termIndex) {
     	int start=cachePos.get(phraseIndex).get(termIndex);
         for (int i = start; i < postinglist.size(); i += 2) {
             if (postinglist.get(i) > docId){
@@ -357,7 +357,7 @@ public class IndexerInvertedCompressed extends Indexer {
         return -1;
     }
 
-    private static int nextForOccurence(int docId, Vector<List<Integer>> postinglists,int phraseIndex) {
+    private  int nextForOccurence(int docId, Vector<List<Integer>> postinglists,int phraseIndex) {
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
@@ -383,7 +383,7 @@ public class IndexerInvertedCompressed extends Indexer {
             return nextForOccurence(maximum - 1, postinglists,phraseIndex);
     }
 
-    private static int nextPos(List<Integer> postinglist, int docId, int pos,int phrasePos,int termPos) {
+    private  int nextPos(List<Integer> postinglist, int docId, int pos,int phrasePos,int termPos) {
         int docPosition = -1;
         int start=cachePos.get(phrasePos).get(termPos);
         for (int i = start; i < postinglist.size(); i += 2) {
@@ -406,7 +406,7 @@ public class IndexerInvertedCompressed extends Indexer {
         return -1;
     }
 
-    private static int nextPhrase(int docId, int pos, Vector<List<Integer>> postinglists,int phrasePos) {
+    private  int nextPhrase(int docId, int pos, Vector<List<Integer>> postinglists,int phrasePos) {
         int[] positions = new int[postinglists.size()];
         boolean success = true;
         for (int i = 0; i < positions.length; i++)
@@ -428,7 +428,7 @@ public class IndexerInvertedCompressed extends Indexer {
             return nextPhrase(docId, positions[0], postinglists,phrasePos);
     }
 
-    private static int nextPhrase(int docId, Vector<List<Integer>> postinglists,int i) {
+    private  int nextPhrase(int docId, Vector<List<Integer>> postinglists,int i) {
         int docVerify = nextForOccurence(docId, postinglists,i);
         // System.out.println("docVerify is: "+docVerify);
         if (docVerify < 0)
@@ -439,7 +439,7 @@ public class IndexerInvertedCompressed extends Indexer {
         return nextPhrase(docVerify, postinglists,i);
     }
 
-    private static int next(int docId, Vector<Vector<List<Integer>>> postinglists) {
+    private  int next(int docId, Vector<Vector<List<Integer>>> postinglists) {
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
@@ -491,7 +491,7 @@ public class IndexerInvertedCompressed extends Indexer {
         if (canUseCache(query,docid)==false)
         {
         	previousQuery=query._query;
-        	previousDocid=docid;
+        	previousDocid=-1;
         	cachePos=new Vector<Vector<Integer>> ();
         	for (int i=0;i<tokens.size();i++){
         		Vector<Integer> tempVec=new Vector<Integer> ();
