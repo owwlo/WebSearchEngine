@@ -336,6 +336,7 @@ public class IndexerInvertedOccurrence extends Indexer {
                 return postinglist.get(i);
             }
         }
+        cachePos.get(phraseIndex).set(termIndex, postinglist.size());
         return -1;
     }
 
@@ -375,8 +376,10 @@ public class IndexerInvertedOccurrence extends Indexer {
                 break;
             }
         }
-        if (docPosition == -1)
+        if (docPosition == -1){
+        	cachePos.get(phrasePos).set(termPos, postinglist.size());
             return -1;
+        }
         int Pos = docPosition + 1;
         while (Pos < postinglist.size() && postinglist.get(Pos - 1) == docId) {
             if (postinglist.get(Pos) > pos){
@@ -385,6 +388,7 @@ public class IndexerInvertedOccurrence extends Indexer {
             }
             Pos += 2;
         }
+        cachePos.get(phrasePos).set(termPos, postinglist.size());
         return -1;
     }
 
@@ -484,7 +488,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         	}
         }
         result = next(docid, postingLists);
-        previousDocid=docid;
+        previousDocid=result-1;
         if (result < 0)
             return null;
         else
