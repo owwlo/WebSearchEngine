@@ -491,7 +491,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         	}
         }
         result = next(docid, postingLists);
-        // System.out.println("the result is:"+result);
+        previousDocid=docid;
         if (result < 0)
             return null;
         else
