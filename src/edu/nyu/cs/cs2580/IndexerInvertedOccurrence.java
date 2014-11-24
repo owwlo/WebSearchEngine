@@ -36,7 +36,7 @@ public class IndexerInvertedOccurrence extends Indexer {
     private String previousQuery = new String();
     private int previousDocid = -1;
     private Vector<Vector<Integer>> cachePos = new Vector<Vector<Integer>>();
-    Vector<Vector<List<Integer>>> postingLists = new Vector<Vector<List<Integer>>>();
+   // Vector<Vector<List<Integer>>> postingLists = new Vector<Vector<List<Integer>>>();
     // Table name for index of documents.
     private static final String DOC_IDX_TBL = "docDB";
     private static final String DOC_URL_TBL = "docUrlDB";
@@ -472,10 +472,9 @@ public class IndexerInvertedOccurrence extends Indexer {
     public Document nextDoc(Query query, int docid) {
         Vector<String> tokens = query._tokens;
         int result = -1;
-        if (canUseCache(query, docid) == false)
-        {
-        	   postingLists = new Vector<Vector<List<Integer>>>();
-        	   for (int i = 0; i < tokens.size(); i++) {
+       
+        Vector<Vector<List<Integer>>>   postingLists = new Vector<Vector<List<Integer>>>();
+       for (int i = 0; i < tokens.size(); i++) {
                 Vector<List<Integer>> container = new Vector<List<Integer>>();
                 String[] consecutiveWords = tokens.get(i).split(" ");
                 for (int j = 0; j < consecutiveWords.length; j++) {
@@ -488,43 +487,23 @@ public class IndexerInvertedOccurrence extends Indexer {
                 // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
                 postingLists.add(container);
             }
-            previousQuery = query._query;
-            previousDocid = -1;
-            cachePos = new Vector<Vector<Integer>>();
-            for (int i = 0; i < postingLists.size(); i++) {
-                Vector<Integer> tempVec = new Vector<Integer>();
-                int size = postingLists.get(i).size();
-                for (int j = 0; j < size; j++)
-                    tempVec.add(0);
-                cachePos.add(tempVec);
-            }
-            /*postingLists = new Vector<Vector<List<Integer>>>();
-            for (int i = 0; i < tokens.size(); i++) {
-                Vector<List<Integer>> container = new Vector<List<Integer>>();
-                String[] consecutiveWords = tokens.get(i).split(" ");
-                for (int j = 0; j < consecutiveWords.length; j++) {
-                    Stemmer s = new Stemmer();
-                    s.add(consecutiveWords[j].toLowerCase().toCharArray(),
-                            consecutiveWords[j].length());
-                    s.stem();
-                    container.add(ivtGet(s.toString()));
-                }
-                // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
-                postingLists.add(container);
-            }*/
-        }
-        /*
-         * for (int i = 0; i < tokens.size(); i++) { Vector<List<Integer>>
-         * container = new Vector<List<Integer>>(); String[] consecutiveWords =
-         * tokens.get(i).split(" "); for (int j = 0; j <
-         * consecutiveWords.length; j++) { Stemmer s = new Stemmer();
-         * s.add(consecutiveWords[j].toLowerCase().toCharArray(),
-         * consecutiveWords[j].length()); s.stem();
-         * container.add(ivtGet(s.toString())); } //
-         * System.out.println("size is: "
-         * +docInvertedMap.get(s.toString()).size());
-         * postingLists.add(container); }
-         */
+       if (canUseCache(query, docid) == false)
+       {
+       	 
+           previousQuery = query._query;
+           previousDocid = -1;
+           cachePos = new Vector<Vector<Integer>>();
+           for (int i = 0; i < postingLists.size(); i++) {
+               Vector<Integer> tempVec = new Vector<Integer>();
+               int size = postingLists.get(i).size();
+               for (int j = 0; j < size; j++)
+                   tempVec.add(0);
+               cachePos.add(tempVec);
+           }
+       }
+   
+		
+         
         result = next(docid, postingLists);
         previousDocid = result - 1;
         if (result < 0)
