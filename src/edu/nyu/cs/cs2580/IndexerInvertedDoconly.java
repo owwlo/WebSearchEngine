@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -417,6 +418,29 @@ public class IndexerInvertedDoconly extends Indexer {
         return result;
     }
 
+    private static int bsInner(final int start, final int end, final int docid,
+            final List<Integer> list) {
+        int Start = start;
+        int End = end;
+        while (Start <= End) {
+            int mid = (Start + End) / 2;
+            if (docid == list.get(2 * mid))
+                return (2 * mid);
+            if (docid < list.get(2 * mid))
+                End = mid - 1;
+            else
+                Start = mid + 1;
+            // System.out.println("Start is: "+Start+"End is :"+End);
+        }
+        return -1;
+    }
+
+    private int binarySearchPostList(final int docId, final List<Integer> list) {
+        // return bsInner(0, list.size() - 1, docId, list);
+        // Modification:
+        return bsInner(0, list.size() / 2 - 1, docId, list);
+    }
+
     @Override
     public int documentTermFrequency(String term, int docid) {
         // Stem given term.
@@ -424,13 +448,21 @@ public class IndexerInvertedDoconly extends Indexer {
         s.add(term.toLowerCase().toCharArray(), term.length());
         s.stem();
 
-        Map<String, Integer> tfMap = tfm.gettermFrequencyForDoc(docid);
-
-        if (!tfMap.containsKey(s.toString())) {
+        if (!ivtContainsKey(s.toString())) {
             return 0;
         }
+        // Get posting list from index.
+        List<Integer> l = ivtGet(s.toString());
 
-        return tfMap.get(s.toString());
+        // Use binary search looking for docid within given posting list.
+        int pos = binarySearchPostList(docid, l);
+        if (pos != -1) {
+            // Return term frequency for given doc and term
+            // System.out.println("current num is: "+l.get(pos+1));
+            return l.get(pos + 1);
+        } else {
+            return 0;
+        }
     }
 
     private boolean ivtContainsKey(String key) {
@@ -442,10 +474,13 @@ public class IndexerInvertedDoconly extends Indexer {
         return false;
     }
 
-    private Map<String, List<Integer>> cache = new HashMap<String, List<Integer>>();
+    private Map<String, List<Integer>> cache = new LinkedHashMap<String, List<Integer>>();
 
     private List<Integer> ivtGet(String key) {
         if (cache.containsKey(key)) {
+            List<Integer> tmp = cache.get(key);
+            cache.remove(tmp);
+            cache.put(key, tmp);
             return cache.get(key);
         }
         if (cache.size() > 1) {
