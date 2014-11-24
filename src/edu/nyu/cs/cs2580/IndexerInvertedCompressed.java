@@ -332,6 +332,7 @@ public class IndexerInvertedCompressed extends Indexer {
     /**
      * In HW2, you should be using {@link DocumentIndexed}
      */
+
     private String previousQuery = new String();
     private int previousDocid = -1;
     private Vector<Vector<Integer>> cachePos = new Vector<Vector<Integer>>();
@@ -344,6 +345,7 @@ public class IndexerInvertedCompressed extends Indexer {
                 return postinglist.get(i);
             }
         }
+        cachePos.get(phraseIndex).set(termIndex, postinglist.size());
         return -1;
     }
 
@@ -383,8 +385,10 @@ public class IndexerInvertedCompressed extends Indexer {
                 break;
             }
         }
-        if (docPosition == -1)
+        if (docPosition == -1) {
+            cachePos.get(phrasePos).set(termPos, postinglist.size());
             return -1;
+        }
         int Pos = docPosition + 1;
         while (Pos < postinglist.size() && postinglist.get(Pos - 1) == docId) {
             if (postinglist.get(Pos) > pos) {
@@ -393,6 +397,7 @@ public class IndexerInvertedCompressed extends Indexer {
             }
             Pos += 2;
         }
+        cachePos.get(phrasePos).set(termPos, postinglist.size());
         return -1;
     }
 
@@ -456,10 +461,14 @@ public class IndexerInvertedCompressed extends Indexer {
     }
 
     private boolean canUseCache(Query query, int docid) {
-        if (query._query.equals(previousQuery) == false)
+        if (query._query.equals(previousQuery) == false) {
             return false;
-        if (docid <= previousDocid)
+        }
+
+        if (docid <= previousDocid) {
             return false;
+        }
+
         return true;
     }
 
@@ -467,21 +476,23 @@ public class IndexerInvertedCompressed extends Indexer {
     public Document nextDoc(Query query, int docid) {
         Vector<String> tokens = query._tokens;
         int result = -1;
+
         Vector<Vector<List<Integer>>> postingLists = new Vector<Vector<List<Integer>>>();
         for (int i = 0; i < tokens.size(); i++) {
             Vector<List<Integer>> container = new Vector<List<Integer>>();
             String[] consecutiveWords = tokens.get(i).split(" ");
             for (int j = 0; j < consecutiveWords.length; j++) {
                 Stemmer s = new Stemmer();
-                s.add(consecutiveWords[j].toLowerCase().toCharArray(), consecutiveWords[j].length());
+                s.add(consecutiveWords[j].toLowerCase().toCharArray(),
+                        consecutiveWords[j].length());
                 s.stem();
                 container.add(decompressArray(ivtGet(s.toString())));
             }
-            // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
             postingLists.add(container);
         }
         if (canUseCache(query, docid) == false)
         {
+
             previousQuery = query._query;
             previousDocid = -1;
             cachePos = new Vector<Vector<Integer>>();
@@ -494,8 +505,7 @@ public class IndexerInvertedCompressed extends Indexer {
             }
         }
         result = next(docid, postingLists);
-        // System.out.println("the result is:"+result);
-        previousDocid = docid;
+        previousDocid = result - 1;
         if (result < 0)
             return null;
         else
