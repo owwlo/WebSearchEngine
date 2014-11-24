@@ -31,9 +31,10 @@ public class IndexerInvertedOccurrence extends Indexer {
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, Integer> docUrlMap = null;
     private Map<String, Object> infoMap = null;
-    private static String previousQuery = new String();
-    private static int previousDocid = -1;
-    private static Vector<Vector<Integer>> cachePos = new Vector<Vector<Integer>>();
+    
+    private String previousQuery=new String();
+    private int previousDocid=-1;
+    private Vector<Vector<Integer>> cachePos=new Vector<Vector<Integer>> ();
     // Table name for index of documents.
     private static final String DOC_IDX_TBL = "docDB";
     private static final String DOC_URL_TBL = "docUrlDB";
@@ -328,9 +329,8 @@ public class IndexerInvertedOccurrence extends Indexer {
     /**
      * In HW2, you should be using {@link DocumentIndexed}.
      */
-    private static int nextInOccurence(int docId, List<Integer> postinglist, int phraseIndex,
-            int termIndex) {
-        int start = cachePos.get(phraseIndex).get(termIndex);
+    private  int nextInOccurence(int docId, List<Integer> postinglist,int phraseIndex,int termIndex) {
+    	int start=cachePos.get(phraseIndex).get(termIndex);
         for (int i = start; i < postinglist.size(); i += 2) {
             if (postinglist.get(i) > docId) {
                 cachePos.get(phraseIndex).set(termIndex, i);
@@ -340,8 +340,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         return -1;
     }
 
-    private static int nextForOccurence(int docId, Vector<List<Integer>> postinglists,
-            int phraseIndex) {
+    private  int nextForOccurence(int docId, Vector<List<Integer>> postinglists,int phraseIndex) {
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
@@ -367,8 +366,7 @@ public class IndexerInvertedOccurrence extends Indexer {
             return nextForOccurence(maximum - 1, postinglists, phraseIndex);
     }
 
-    private static int nextPos(List<Integer> postinglist, int docId, int pos, int phrasePos,
-            int termPos) {
+    private  int nextPos(List<Integer> postinglist, int docId, int pos,int phrasePos,int termPos) {
         int docPosition = -1;
         int start = cachePos.get(phrasePos).get(termPos);
         for (int i = start; i < postinglist.size(); i += 2) {
@@ -391,8 +389,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         return -1;
     }
 
-    private static int nextPhrase(int docId, int pos, Vector<List<Integer>> postinglists,
-            int phrasePos) {
+    private  int nextPhrase(int docId, int pos, Vector<List<Integer>> postinglists,int phrasePos) {
         int[] positions = new int[postinglists.size()];
         boolean success = true;
         for (int i = 0; i < positions.length; i++)
@@ -414,8 +411,8 @@ public class IndexerInvertedOccurrence extends Indexer {
             return nextPhrase(docId, positions[0], postinglists, phrasePos);
     }
 
-    private static int nextPhrase(int docId, Vector<List<Integer>> postinglists, int i) {
-        int docVerify = nextForOccurence(docId, postinglists, i);
+    private  int nextPhrase(int docId, Vector<List<Integer>> postinglists,int i) {
+        int docVerify = nextForOccurence(docId, postinglists,i);
         // System.out.println("docVerify is: "+docVerify);
         if (docVerify < 0)
             return -1;
@@ -425,7 +422,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         return nextPhrase(docVerify, postinglists, i);
     }
 
-    private static int next(int docId, Vector<Vector<List<Integer>>> postinglists) {
+    private  int next(int docId, Vector<Vector<List<Integer>>> postinglists) {
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
@@ -482,16 +479,16 @@ public class IndexerInvertedOccurrence extends Indexer {
         }
         if (canUseCache(query, docid) == false)
         {
-            previousQuery = query._query;
-            previousDocid = -1;
-            cachePos = new Vector<Vector<Integer>>();
-            for (int i = 0; i < tokens.size(); i++) {
-                Vector<Integer> tempVec = new Vector<Integer>();
-                int size = postingLists.get(i).size();
-                for (int j = 0; j < size; j++)
-                    tempVec.add(0);
-                cachePos.add(tempVec);
-            }
+        	previousQuery=query._query;
+        	previousDocid=-1;
+        	cachePos=new Vector<Vector<Integer>> ();
+        	for (int i=0;i<tokens.size();i++){
+        		Vector<Integer> tempVec=new Vector<Integer> ();
+        		int size=postingLists.get(i).size();
+        		for (int j=0;j<size;j++)
+        			tempVec.add(0);
+        		cachePos.add(tempVec);
+        	}
         }
         result = next(docid, postingLists);
         // System.out.println("the result is:"+result);
