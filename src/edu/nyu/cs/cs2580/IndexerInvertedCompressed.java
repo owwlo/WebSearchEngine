@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -642,10 +643,13 @@ public class IndexerInvertedCompressed extends Indexer {
         return false;
     }
 
-    private Map<String, List<Byte>> cache = new HashMap<String, List<Byte>>();
+    private Map<String, List<Byte>> cache = new LinkedHashMap<String, List<Byte>>();
 
     private List<Byte> ivtGet(String key) {
         if (cache.containsKey(key)) {
+            List<Byte> tmp = cache.get(key);
+            cache.remove(tmp);
+            cache.put(key, tmp);
             return cache.get(key);
         }
         if (cache.size() > 1) {
