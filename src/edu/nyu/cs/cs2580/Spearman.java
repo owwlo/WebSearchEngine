@@ -21,7 +21,7 @@ public class Spearman {
 		public int compareTo(Object target){
 			SpearObject to =(SpearObject)target;
 			if (Math.abs(val-to.val)<0.0001){
-				return (docName.compareTo(to.docName)*(-1));
+				return (docName.compareTo(to.docName)*(1));
 			}
 			if (val<to.val)
 				return 1;
@@ -84,13 +84,13 @@ public class Spearman {
 		for (int i=0;i<pageRank.size();i++){
 			firstDenominator+=(i+1-Z)*(i+1-Z);
 		}
-		firstDenominator=Math.sqrt(firstDenominator);
+		//firstDenominator=Math.sqrt(firstDenominator);
 		double secondDenominator=0;
 		for (int i=0;i<numViews.size();i++){
 			secondDenominator+=(i+1-Z)*(i+1-Z);
 		}
-		secondDenominator=Math.sqrt(secondDenominator);
-		System.out.println  (result/(firstDenominator*secondDenominator));
+		//secondDenominator=Math.sqrt(secondDenominator);
+		System.out.println(result/Math.sqrt(firstDenominator*secondDenominator));
 		
 	}
 

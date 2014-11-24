@@ -497,10 +497,7 @@ public class IndexerInvertedOccurrence extends Indexer {
                    tempVec.add(0);
                cachePos.add(tempVec);
            }
-       }
-   
-		
-         
+       }        
         result = next(docid, postingLists);
         previousDocid = result - 1;
         if (result < 0)
