@@ -56,9 +56,7 @@ public class RankerComprehensive extends Ranker {
             }
         }
         double pr=d.getPageRank();
-        if (pr>3.0)
-        	pr=3.0;
-        logScore += lambda_1 * logScore + pr * lambda_2
+        logScore += lambda_1 * logScore + Math.log(d.getPageRank()+1) * lambda_2
                 + Math.log((double) d.getNumViews() + 1) * lambda_3;
         return new ScoredDocument(d, logScore);
     }
