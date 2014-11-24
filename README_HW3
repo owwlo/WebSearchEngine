@@ -1,0 +1,61 @@
+1. Mining
+
+java -cp src edu.nyu.cs.cs2580.SearchEngine --mode=mining --options=conf/engine_IndexerInvertedCompressed.conf
+
+This will create two files - numView.index and PR.index - in index folder.
+
+====================================
+
+2. Indexing
+
+java -Xmx512m -cp src:libs/invertedIndexBuilder.jar:libs/kryo-3.0.0.jar:libs/objenesis-1.2.jar:libs/jsoup-1.8.1.jar:libs/minlog-1.2.jar:libs/reflectasm-1.09-shaded.jar edu.nyu.cs.cs2580.SearchEngine --mode=index --options=conf/engine_IndexerInvertedCompressed.conf
+
+java -Xmx512m -cp src:libs/invertedIndexBuilder.jar:libs/kryo-3.0.0.jar:libs/objenesis-1.2.jar:libs/jsoup-1.8.1.jar:libs/minlog-1.2.jar:libs/reflectasm-1.09-shaded.jar edu.nyu.cs.cs2580.SearchEngine --mode=index --options=conf/engine_IndexerInvertedOccurrence.conf
+
+java -Xmx512m -cp src:libs/invertedIndexBuilder.jar:libs/kryo-3.0.0.jar:libs/objenesis-1.2.jar:libs/jsoup-1.8.1.jar:libs/minlog-1.2.jar:libs/reflectasm-1.09-shaded.jar edu.nyu.cs.cs2580.SearchEngine --mode=index --options=conf/engine_IndexerInvertedDoconly.conf
+
+====================================
+
+3. Serving
+
+java -Xmx512m -cp src:libs/invertedIndexBuilder.jar:libs/kryo-3.0.0.jar:libs/objenesis-1.2.jar:libs/jsoup-1.8.1.jar:libs/minlog-1.2.jar:libs/reflectasm-1.09-shaded.jar edu.nyu.cs.cs2580.SearchEngine --mode=serve --port=25807 --options=conf/engine_IndexerInvertedCompressed.conf
+
+java -Xmx512m -cp src:libs/invertedIndexBuilder.jar:libs/kryo-3.0.0.jar:libs/objenesis-1.2.jar:libs/jsoup-1.8.1.jar:libs/minlog-1.2.jar:libs/reflectasm-1.09-shaded.jar edu.nyu.cs.cs2580.SearchEngine --mode=serve --port=25807 --options=conf/engine_IndexerInvertedOccurrence.conf
+
+java -Xmx512m -cp src:libs/invertedIndexBuilder.jar:libs/kryo-3.0.0.jar:libs/objenesis-1.2.jar:libs/jsoup-1.8.1.jar:libs/minlog-1.2.jar:libs/reflectasm-1.09-shaded.jar edu.nyu.cs.cs2580.SearchEngine --mode=serve --port=25807 --options=conf/engine_IndexerInvertedDoconly.conf
+
+====================================
+
+4. Searching
+
+** We only test Comprehensive ranker. **
+
+curl "http://localhost:25807/search?query=google%20map&ranker=comprehensive"
+
+For results:
+1526	Category:Web 2.0 - Wikipedia, the free encyclopedia	-15.464612456949396	0.10481399	0
+8288	Portal:Google - Wikipedia, the free encyclopedia	-15.63009563680926	0.22527494	0
+4416	Android (operating system) - Wikipedia, the free encyclopedia	-16.28142107760106	1.1501344	1256
+1188	U.S. Route 50 in Nevada - Wikipedia, the free encyclopedia	-16.59754125960235	0.107093304	3
+57	Nevada State Route 223 - Wikipedia, the free encyclopedia	-17.0525678024234	0.13509636	0
+
+3rd column shows comprehensive score
+4th column shows pagerank score
+5th column shows numviews score
+
+====================================
+
+5. Comparing PageRank and NumViews
+
+java -cp src edu.nyu.cs.cs2580.Spearman data/index/PR.index data/index/numView.index
+
+Result: 0.4591009803448099
+
+====================================
+
+6. Pseudo-Relevance Feedback
+
+** We provide a script for this **
+
+grading_hw3_4_3.sh - script to run the test.
+queries.tsv - provide your queries here.
