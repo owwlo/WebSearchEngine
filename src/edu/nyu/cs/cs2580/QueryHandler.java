@@ -66,7 +66,7 @@ public class QueryHandler implements HttpHandler {
 					"s", "t", "can", "will", "just", "don", "should", "now",
 					// from statistics
 					"many", "\"the", "?", "1", "b", "&", "", "wikipedia",
-					"also", "[edit]", "^" }));
+					"also", "[edit]", "^", "[1]", "n/a" }));
 
 	public static class CgiArguments {
 		// The raw user query
@@ -406,7 +406,7 @@ public class QueryHandler implements HttpHandler {
 			if (sum == 0.0) {
 				System.err.println("sum == 0 ???");
 			} else {
-				System.out.println("Sum is " + sum);
+			//	System.out.println("Sum is " + sum);
 			}
 
 			// normalize
