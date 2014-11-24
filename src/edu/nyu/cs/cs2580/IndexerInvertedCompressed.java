@@ -491,7 +491,7 @@ public class IndexerInvertedCompressed extends Indexer {
         if (canUseCache(query,docid)==false)
         {
         	previousQuery=query._query;
-        	previousDocid=docid;
+        	previousDocid=-1;
         	cachePos=new Vector<Vector<Integer>> ();
         	for (int i=0;i<tokens.size();i++){
         		Vector<Integer> tempVec=new Vector<Integer> ();
