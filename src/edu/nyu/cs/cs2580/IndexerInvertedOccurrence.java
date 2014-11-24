@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -455,10 +456,12 @@ public class IndexerInvertedOccurrence extends Indexer {
 
     private boolean canUseCache(Query query, int docid) {
         if (query._query.equals(previousQuery) == false) {
+            System.out.println("flag1");
             return false;
         }
 
         if (docid <= previousDocid) {
+            System.out.println("flag1");
             return false;
         }
 
@@ -602,10 +605,13 @@ public class IndexerInvertedOccurrence extends Indexer {
         return false;
     }
 
-    private Map<String, List<Integer>> cache = new HashMap<String, List<Integer>>();
+    private Map<String, List<Integer>> cache = new LinkedHashMap<String, List<Integer>>();
 
     private List<Integer> ivtGet(String key) {
         if (cache.containsKey(key)) {
+            List<Integer> tmp = cache.get(key);
+            cache.remove(tmp);
+            cache.put(key, tmp);
             return cache.get(key);
         }
         if (cache.size() > 1) {
