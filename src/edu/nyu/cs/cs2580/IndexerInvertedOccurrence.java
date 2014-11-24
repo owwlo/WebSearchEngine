@@ -482,7 +482,7 @@ public class IndexerInvertedOccurrence extends Indexer {
         	previousQuery=query._query;
         	previousDocid=-1;
         	cachePos=new Vector<Vector<Integer>> ();
-        	for (int i=0;i<tokens.size();i++){
+        	for (int i=0;i<postingLists.size();i++){
         		Vector<Integer> tempVec=new Vector<Integer> ();
         		int size=postingLists.get(i).size();
         		for (int j=0;j<size;j++)
