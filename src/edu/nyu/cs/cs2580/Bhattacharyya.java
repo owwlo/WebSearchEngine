@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Bhattacharyya {
+
 	public static class Pair<A, B> {
 		public A first;
 		public B second;
@@ -21,7 +22,8 @@ public class Bhattacharyya {
 			this.first = first;
 			this.second = second;
 		}
-		public Pair(Map.Entry<A, B> e){
+
+		public Pair(Map.Entry<A, B> e) {
 			super();
 			this.first = e.getKey();
 			this.second = e.getValue();
@@ -66,6 +68,7 @@ public class Bhattacharyya {
 				double prob = Double.parseDouble(entry[1]);
 				expanded.put(term, prob);
 			}
+			reader.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -95,25 +98,26 @@ public class Bhattacharyya {
 			e.printStackTrace();
 		}
 	}
-	
-	public void write2file(String filename){
+
+	public void write2file(String filename) {
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-			for (Map.Entry<Pair<String, String>, Double> e : coeff.entrySet()){
+			for (Map.Entry<Pair<String, String>, Double> e : coeff.entrySet()) {
 				Pair<String, String> p = e.getKey();
-				writer.write(p.first+"\t"+p.second+"\t"+e.getValue()+"\n");
+				writer.write(p.first + "\t" + p.second + "\t" + e.getValue()
+						+ "\n");
 			}
 			writer.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	public void computeSim() {
 		Set<String> set = expandedQuery.keySet();
-		
+
 		for (String q1 : set) {
 			Map<String, Double> terms1 = expandedQuery.get(q1);
 			for (String q2 : set) {
@@ -125,21 +129,22 @@ public class Bhattacharyya {
 
 				if (coeff.containsKey(partner)) {
 					coeff.put(key, coeff.get(partner));
+					continue;
 				}
 				double beta = 0.0;
 				Map<String, Double> terms2 = expandedQuery.get(q2);
 				// iterate over all terms
-				for (Map.Entry<String, Double> e : terms1.entrySet()){
+				for (Map.Entry<String, Double> e : terms1.entrySet()) {
 					String term = e.getKey();
-					if (terms2.containsKey(term)){
-						beta += Math.sqrt(terms1.get(term)*terms2.get(term));
+					if (terms2.containsKey(term)) {
+						beta += Math.sqrt(terms1.get(term) * terms2.get(term));
 					}
 				}
-				
+
 				coeff.put(key, beta);
 			}
 		}
-		
+
 	}
 
 	public static void main(String[] args) throws IOException {
