@@ -15,10 +15,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.jsoup.Jsoup;
+import org.owwlo.InvertedIndexing.InvertedIndexBuilder;
+import org.owwlo.InvertedIndexing.InvertedIndexBuilder.IvtMapByte;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
-import edu.nyu.cs.cs2580.utils.PersistentStoreManager.IvtMapByte;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager.TermFrequencyManager;
 
 /**
@@ -132,8 +133,6 @@ public class IndexerInvertedCompressed extends Indexer {
                 di.setUrl(url);
                 di.setLength(passageLength);
 
-                // for each token in each document, add to the map of <token,
-                // {docid, occ}>
                 for (String token : ivtMapItem.keySet()) {
                     if (!ivtMap.containsKey(token)) {
                         ivtMap.put(token, new ArrayList<Byte>());
@@ -189,9 +188,12 @@ public class IndexerInvertedCompressed extends Indexer {
 
         infoMap.put("_numDocs", files.size());
 
-        long termCount = 0;
+        InvertedIndexBuilder builder = InvertedIndexBuilder.getBuilder(new File(
+                _options._indexPrefix));
 
         tfm = new TermFrequencyManager(_options._indexPrefix);
+
+        long termCount = 0;
 
         for (int batchNum = 0; batchNum < files.size() / filesPerBatch + 1; batchNum++) {
             int fileIdStart = batchNum * filesPerBatch;
@@ -206,8 +208,7 @@ public class IndexerInvertedCompressed extends Indexer {
             ExecutorService threadPool = Executors
                     .newFixedThreadPool(threadCount);
 
-            IvtMapByte ivtMapFile = new IvtMapByte(new File(
-                    _options._indexPrefix), "ivt" + batchNum, true);
+            IvtMapByte ivtMapFile = builder.createDistributedIvtiByteMap();
             Map<String, List<Byte>> ivtMap = new HashMap<String, List<Byte>>();
 
             List<InvertIndexBuildingTask> taskList = new ArrayList<InvertIndexBuildingTask>();
@@ -237,10 +238,6 @@ public class IndexerInvertedCompressed extends Indexer {
                 termCount += iibt.getTermCount();
             }
 
-            System.out.println(fileIdEnd
-                    + " pages have been processed. Elapsed: "
-                    + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
-
             System.out.println("Writing Inverted Map to disk. " + fileIdEnd
                     + " pages have been processed. Elapsed: "
                     + (System.currentTimeMillis() - start_t) / 1000.0 + "s");
@@ -254,22 +251,20 @@ public class IndexerInvertedCompressed extends Indexer {
 
         infoMap.put("_totalTermFrequency", termCount);
 
+        builder.close();
         tfm.close();
 
         CorpusAnalyzer ca = new CorpusAnalyzerPagerank(_options);
         LogMiner lm = new LogMinerNumviews(_options);
         Map<String, Double> pageRankMap = (Map<String, Double>) ca.load();
         Map<String, Double> numViewsMap = (Map<String, Double>) lm.load();
-        
-        for(Map.Entry<Integer, DocumentIndexed> die : docMap.entrySet()) {
+
+        for (Map.Entry<Integer, DocumentIndexed> die : docMap.entrySet()) {
             int docid = die.getKey();
             DocumentIndexed di = die.getValue();
             String basename = di.getUrl();
-            di.setPageRank((float)(double)pageRankMap.get(basename));
-            di.setNumViews((int)(double)numViewsMap.get(basename));
-            
-            //System.out.println(basename + " " + pageRankMap.get(basename) + " "
-            //        + numViewsMap.get(basename));
+            di.setPageRank((float) (double) pageRankMap.get(basename));
+            di.setNumViews((int) (double) numViewsMap.get(basename));
         }
 
         storeVariables();
@@ -319,16 +314,13 @@ public class IndexerInvertedCompressed extends Indexer {
 
     @Override
     public void loadIndex() throws IOException, ClassNotFoundException {
+        InvertedIndexBuilder builder = InvertedIndexBuilder.getBuilder(new File(
+                _options._indexPrefix));
+
         tfm = new TermFrequencyManager(_options._indexPrefix);
 
-        for (int i = 0; i < 100; i++) {
-            File file = new File(_options._indexPrefix, "ivt" + i);
-            if (!file.exists()) {
-                break;
-            }
-            ivtIndexMapList.add(new IvtMapByte(new File(_options._indexPrefix),
-                    "ivt" + i, false));
-        }
+        IvtMapByte ivtMapBatch = builder.getUnifiedDistributedIvtiByteMap();
+        ivtIndexMapList.add(ivtMapBatch);
         readVariables();
     }
 
@@ -340,30 +332,28 @@ public class IndexerInvertedCompressed extends Indexer {
     /**
      * In HW2, you should be using {@link DocumentIndexed}
      */
-    private  String previousQuery=new String();
-    private  int previousDocid=-1;
-    private  Vector<Vector<Integer>> cachePos=new Vector<Vector<Integer>> ();
-    
-    
-    
-    private  int nextInOccurence(int docId, List<Integer> postinglist,int phraseIndex,int termIndex) {
-    	int start=cachePos.get(phraseIndex).get(termIndex);
+    private String previousQuery = new String();
+    private int previousDocid = -1;
+    private Vector<Vector<Integer>> cachePos = new Vector<Vector<Integer>>();
+
+    private int nextInOccurence(int docId, List<Integer> postinglist, int phraseIndex, int termIndex) {
+        int start = cachePos.get(phraseIndex).get(termIndex);
         for (int i = start; i < postinglist.size(); i += 2) {
-            if (postinglist.get(i) > docId){
-            	cachePos.get(phraseIndex).set(termIndex, i);
+            if (postinglist.get(i) > docId) {
+                cachePos.get(phraseIndex).set(termIndex, i);
                 return postinglist.get(i);
             }
         }
         return -1;
     }
 
-    private  int nextForOccurence(int docId, Vector<List<Integer>> postinglists,int phraseIndex) {
+    private int nextForOccurence(int docId, Vector<List<Integer>> postinglists, int phraseIndex) {
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
         int maximum = Integer.MIN_VALUE;
         for (int i = 0; i < postinglists.size(); i++) {
-            int currentId = nextInOccurence(docId, postinglists.get(i),phraseIndex,i);
+            int currentId = nextInOccurence(docId, postinglists.get(i), phraseIndex, i);
             if (currentId < 0)
                 return -1;
             if (previousVal < 0) {
@@ -380,12 +370,12 @@ public class IndexerInvertedCompressed extends Indexer {
         if (equilibrium == true)
             return previousVal;
         else
-            return nextForOccurence(maximum - 1, postinglists,phraseIndex);
+            return nextForOccurence(maximum - 1, postinglists, phraseIndex);
     }
 
-    private  int nextPos(List<Integer> postinglist, int docId, int pos,int phrasePos,int termPos) {
+    private int nextPos(List<Integer> postinglist, int docId, int pos, int phrasePos, int termPos) {
         int docPosition = -1;
-        int start=cachePos.get(phrasePos).get(termPos);
+        int start = cachePos.get(phrasePos).get(termPos);
         for (int i = start; i < postinglist.size(); i += 2) {
             if (postinglist.get(i) == docId) {
                 docPosition = i;
@@ -397,8 +387,8 @@ public class IndexerInvertedCompressed extends Indexer {
             return -1;
         int Pos = docPosition + 1;
         while (Pos < postinglist.size() && postinglist.get(Pos - 1) == docId) {
-            if (postinglist.get(Pos) > pos){
-            	cachePos.get(phrasePos).set(termPos, Pos-1);
+            if (postinglist.get(Pos) > pos) {
+                cachePos.get(phrasePos).set(termPos, Pos - 1);
                 return postinglist.get(Pos);
             }
             Pos += 2;
@@ -406,12 +396,12 @@ public class IndexerInvertedCompressed extends Indexer {
         return -1;
     }
 
-    private  int nextPhrase(int docId, int pos, Vector<List<Integer>> postinglists,int phrasePos) {
+    private int nextPhrase(int docId, int pos, Vector<List<Integer>> postinglists, int phrasePos) {
         int[] positions = new int[postinglists.size()];
         boolean success = true;
         for (int i = 0; i < positions.length; i++)
         {
-            positions[i] = nextPos(postinglists.get(i), docId, pos,phrasePos,i);
+            positions[i] = nextPos(postinglists.get(i), docId, pos, phrasePos, i);
             if (positions[i] < 0)
                 return -1;
         }
@@ -425,27 +415,27 @@ public class IndexerInvertedCompressed extends Indexer {
         if (success == true)
             return positions[0];
         else
-            return nextPhrase(docId, positions[0], postinglists,phrasePos);
+            return nextPhrase(docId, positions[0], postinglists, phrasePos);
     }
 
-    private  int nextPhrase(int docId, Vector<List<Integer>> postinglists,int i) {
-        int docVerify = nextForOccurence(docId, postinglists,i);
+    private int nextPhrase(int docId, Vector<List<Integer>> postinglists, int i) {
+        int docVerify = nextForOccurence(docId, postinglists, i);
         // System.out.println("docVerify is: "+docVerify);
         if (docVerify < 0)
             return -1;
-        int result = nextPhrase(docVerify, -1, postinglists,i);
+        int result = nextPhrase(docVerify, -1, postinglists, i);
         if (result > 0)
             return docVerify;
-        return nextPhrase(docVerify, postinglists,i);
+        return nextPhrase(docVerify, postinglists, i);
     }
 
-    private  int next(int docId, Vector<Vector<List<Integer>>> postinglists) {
+    private int next(int docId, Vector<Vector<List<Integer>>> postinglists) {
         // System.out.println("current id is: "+docId);
         int previousVal = -1;
         boolean equilibrium = true;
         int maximum = Integer.MIN_VALUE;
         for (int i = 0; i < postinglists.size(); i++) {
-            int currentId = nextPhrase(docId, postinglists.get(i),i);
+            int currentId = nextPhrase(docId, postinglists.get(i), i);
             if (currentId < 0)
                 return -1;
             if (previousVal < 0) {
@@ -464,13 +454,15 @@ public class IndexerInvertedCompressed extends Indexer {
         else
             return next(maximum - 1, postinglists);
     }
-    private boolean canUseCache(Query query, int docid){
-    	if (query._query.equals(previousQuery)==false)
-    		return false;
-    	if (docid<=previousDocid)
-    		return false;
-    	return true;
+
+    private boolean canUseCache(Query query, int docid) {
+        if (query._query.equals(previousQuery) == false)
+            return false;
+        if (docid <= previousDocid)
+            return false;
+        return true;
     }
+
     @Override
     public Document nextDoc(Query query, int docid) {
         Vector<String> tokens = query._tokens;
@@ -488,22 +480,22 @@ public class IndexerInvertedCompressed extends Indexer {
             // System.out.println("size is: "+docInvertedMap.get(s.toString()).size());
             postingLists.add(container);
         }
-        if (canUseCache(query,docid)==false)
+        if (canUseCache(query, docid) == false)
         {
-        	previousQuery=query._query;
-        	previousDocid=-1;
-        	cachePos=new Vector<Vector<Integer>> ();
-        	for (int i=0;i<postingLists.size();i++){
-        		Vector<Integer> tempVec=new Vector<Integer> ();
-        		int size=postingLists.get(i).size();
-        		for (int j=0;j<size;j++)
-        			tempVec.add(0);
-        		cachePos.add(tempVec);
-        	}
+            previousQuery = query._query;
+            previousDocid = -1;
+            cachePos = new Vector<Vector<Integer>>();
+            for (int i = 0; i < postingLists.size(); i++) {
+                Vector<Integer> tempVec = new Vector<Integer>();
+                int size = postingLists.get(i).size();
+                for (int j = 0; j < size; j++)
+                    tempVec.add(0);
+                cachePos.add(tempVec);
+            }
         }
         result = next(docid, postingLists);
         // System.out.println("the result is:"+result);
-        previousDocid=docid;
+        previousDocid = docid;
         if (result < 0)
             return null;
         else
@@ -546,12 +538,6 @@ public class IndexerInvertedCompressed extends Indexer {
                 ++count;
             }
 
-            // int curr_id = decompressBytes(code);
-            // if ( curr_id != last_id){
-            // last_id = curr_id;
-            // ++count;
-            // }
-            // skip the occurrence number
             while ((l.get(i) & 0x80) == (byte) 0) {
                 i++;
             }
