@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * A simple, tiny, nicely embeddable HTTP server in Java
@@ -154,7 +156,7 @@ public abstract class NanoHTTPD {
     public void start() throws IOException {
         myServerSocket = new ServerSocket();
         myServerSocket.bind((hostname != null) ? new InetSocketAddress(hostname, myPort) : new InetSocketAddress(myPort));
-
+        final ExecutorService threadPool = Executors.newFixedThreadPool(1);
         myThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -164,7 +166,7 @@ public abstract class NanoHTTPD {
                         registerConnection(finalAccept);
                         finalAccept.setSoTimeout(SOCKET_READ_TIMEOUT);
                         final InputStream inputStream = finalAccept.getInputStream();
-                        asyncRunner.exec(new Runnable() {
+                        threadPool.execute(new Runnable() {
                             @Override
                             public void run() {
                                 OutputStream outputStream = null;
