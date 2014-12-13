@@ -2,7 +2,7 @@
 
 java -cp src edu.nyu.cs.cs2580.SearchEngine --mode=mining --options=conf/engine_IndexerInvertedCompressed.conf
 
-This will create two files - numView.index and PR.index - in index folder.
+This will create two files - numView.index and PR.index - in data/index folder.
 
 ====================================
 
