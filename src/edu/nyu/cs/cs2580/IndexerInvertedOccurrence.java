@@ -1,14 +1,19 @@
 
 package edu.nyu.cs.cs2580;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +26,9 @@ import org.owwlo.InvertedIndexing.InvertedIndexBuilder.IvtMapInteger;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
+import edu.nyu.cs.cs2580.utils.Utils;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager.TermFrequencyManager;
+import edu.nyu.cs.cs2580.utils.Utils.*;
 
 /**
  * @CS2580: Implement this class for HW2.
@@ -32,7 +39,9 @@ public class IndexerInvertedOccurrence extends Indexer {
     private Map<Integer, DocumentIndexed> docMap = null;
     private Map<String, Integer> docUrlMap = null;
     private Map<String, Object> infoMap = null;
-
+    private String CorpusLocation="data/wiki";
+    
+    
     private String previousQuery = new String();
     private int previousDocid = -1;
     private Vector<Vector<Integer>> cachePos = new Vector<Vector<Integer>>();
@@ -165,7 +174,6 @@ public class IndexerInvertedOccurrence extends Indexer {
     public void constructIndex() throws IOException {
         String corpusFolder = _options._corpusPrefix;
         System.out.println("Construct index from: " + corpusFolder);
-
         long start_t = System.currentTimeMillis();
 
         cleanUpDirectory();
@@ -263,8 +271,8 @@ public class IndexerInvertedOccurrence extends Indexer {
         for (Map.Entry<Integer, DocumentIndexed> die : docMap.entrySet()) {
             DocumentIndexed di = die.getValue();
             String basename = di.getUrl();
-            di.setPageRank((float) (double) pageRankMap.get(basename));
-            di.setNumViews((int) (double) numViewsMap.get(basename));
+          //  di.setPageRank((float) (double) pageRankMap.get(basename));
+          //  di.setNumViews((int) (double) numViewsMap.get(basename));
         }
 
         storeVariables();
@@ -604,7 +612,162 @@ public class IndexerInvertedOccurrence extends Indexer {
     public Map<String, Integer> documentTermFrequencyMap(int docid) {
         return tfm.gettermFrequencyForDoc(docid);
     }
+    public int listLength(String key){
+    	return ivtGet(key).size();
+    }
+    
+    private void addPQ (PriorityQueue<Word> pq, Word word,int windowSize){
+    	if (pq.size()<windowSize){
+    		
+    		if (word.frequency>2000)
+    		   pq.add(word);
+    	}else{
+    		if (word.compareTo(pq.peek())>0&&word.frequency>2000){
+    			pq.poll();
+    			//System.out.println(word.term+" "+word.frequency);
+    			pq.add(word);
+    		}
+    	}
+    }
+    private boolean allChars(String k){
+    	for (int i=0;i<k.length();i++){
+    		if (Character.isAlphabetic(k.charAt(i))==false)
+    			return false;
+    	}
+    	return true;
+    }
+    private void storeCandidate(Query query, Vector<Vector<Word>> temp,int windowSize){
+        
+    	for (int i=0;i<query._tokens.size();i++){
+    		 String target=query._tokens.get(i);
+    	     PriorityQueue<Word> pq=new PriorityQueue<Word> ();
+    	     for (Map<String, List<Integer>> m : ivtIndexMapList) {
+    	           for (String k:m.keySet()){
+    	        	   if (Math.abs(target.length()-k.length())>=2)
+    	        		   continue;
+    	        	   if (k.equals(target)==true){
+    	        		   int listLength = ivtGet(k).size();
+    	        		   temp.get(i).add(new Word(target,listLength));
+    	        		   continue;
+    	        	   }
+    	        	   if (allChars(k)==false)
+    	        		   continue;
+    	        	   if (Utils.wordDistance(target, k)<=1){
+    	        		   int listLength=ivtGet(k).size();
+    	        		   Word word = new Word(k,listLength);
+    	        		   addPQ(pq,word,windowSize);
+    	        		   
+    	        	   }
+    	           }
+    	     }
+    	     while (pq.isEmpty()==false){
+    	    	 temp.get(i).add(pq.poll()) ;
+    	     }         			
+    		
+    	}
+    	    	
+    }
+    
+    private void makeQueryList(Vector<Vector<Word>> Combinations, List<Query> candidates,String[] temp,int position){
+    	if (position>=Combinations.size()){
+    		
+    		String result = temp[0];
+    		for (int i=1;i<position;i++){
+    			
+    			 result+=" ";
+    			 result+=temp[i];
+    			
+    		}
+    		Query query= new Query(result);
+    		query.processQuery();
+    		candidates.add(query);
+    		return;
+    	}
+    	
+    	Vector<Word> current = Combinations.get(position);
+    	for (int i=0;i<current.size();i++){
+    		temp[position]=current.get(i).term;
+    		makeQueryList(Combinations,candidates,temp,position+1);
+    		
+    	}
+    	
+    }
+    
+    private void experiment(List<Query> lists, List<Query> result){
+    	int kk=0;
+    	System.out.println(lists.size());
+    	for (Query q:lists){
+    		int count =0;
+    		int docid=-1;
+    		DocumentIndexed doc;
+    	    while ((doc = (DocumentIndexed) nextDoc(q, docid)) != null) {
+    	    	if (count>=6){
+    	    		result.add(q);
+    	    		break;
+    	    	}
+    	    	count++;
+    	    	docid=doc._docid;
+    	    	
+    	    }
+    		System.out.println(kk);
+    		kk++;
+    		
+    	}
+    }
+    public void refineCandidates(Vector<Vector<Word>> candidates,Query query){
+    	for (int i=0;i<candidates.size();i++){
+    		Vector<Word> vs=candidates.get(i);
+    		String target = query._tokens.get(i);
+    		Iterator<Word> it=vs.iterator();
+    		int size = vs.size();
+    		while (it.hasNext()==true){
+    			Word current=it.next();
+    			if (current.term.equals(target)==true){
+    				if ((size>=2)&&(current.frequency<2000)){
+    					it.remove();
+    				}
+    			}
+    		}
+    	}
+    }
+    public void querySearch(Query query){
+    	int windowSize=2;
+    	Vector<Vector<Word>> temp=new Vector<Vector<Word>>();
+    	for (int i=0;i<query._tokens.size();i++)
+    		temp.add(new Vector<Word> ());
+    	storeCandidate(query,temp,windowSize);
+    	refineCandidates(temp,query);
+    	List<Query> candidates=new ArrayList<Query> ();
+    	String[] tempQuery=new String[temp.size()];
+    	makeQueryList(temp,candidates,tempQuery,0);
+    	for (int i=0;i<candidates.size();i++)
+    		System.out.println(candidates.get(i));
+    	
+    	List<Query> result = new ArrayList<Query>();
+    	/*experiment(candidates,result);
+    	for (int i=0;i<result.size();i++)
+    		System.out.println(result.get(i));*/
+    	
+    }
 
     public static void main(String[] args) {
+    	 	
+    	
     }
+}
+
+class Word implements Comparable<Word>{
+	public String term;
+	public int frequency;
+	@Override
+	public int compareTo(Word w){
+		if (frequency<w.frequency){
+			return -1;
+		}
+		return 1;
+	}
+	public Word(String term,int f){
+		this.term=term;
+		this.frequency=f;
+	}
 }
