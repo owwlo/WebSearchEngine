@@ -20,6 +20,7 @@ import org.owwlo.InvertedIndexing.InvertedIndexBuilder;
 import org.owwlo.InvertedIndexing.InvertedIndexBuilder.IvtMapInteger;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import edu.nyu.cs.cs2580.utils.AssistantIndexBuilder;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager;
 import edu.nyu.cs.cs2580.utils.PersistentStoreManager.TermFrequencyManager;
 
@@ -67,13 +68,15 @@ public class IndexerInvertedOccurrence extends Indexer {
         private int endFileIdx;
         private Map<String, List<Integer>> ivtMap;
         private long termCount = 0;
+        private AssistantIndexBuilder aib;
 
         public InvertIndexBuildingTask(List<File> files, int startFileIdx,
-                int endFileIdx, Map<String, List<Integer>> ivtMap) {
+                int endFileIdx, Map<String, List<Integer>> ivtMap, AssistantIndexBuilder aib) {
             this.files = files;
             this.startFileIdx = startFileIdx;
             this.endFileIdx = endFileIdx;
             this.ivtMap = ivtMap;
+            this.aib = aib;
         }
 
         public long getTermCount() {
@@ -104,6 +107,8 @@ public class IndexerInvertedOccurrence extends Indexer {
                 Scanner scanner = new Scanner(text);
                 int passageLength = 0;
 
+                List<String> termList = new ArrayList<String>();
+
                 while (scanner.hasNext()) {
                     String token = scanner.next().toLowerCase();
                     s.add(token.toCharArray(), token.length());
@@ -128,6 +133,7 @@ public class IndexerInvertedOccurrence extends Indexer {
                     List<Integer> occList = ivtMapItem.get(token);
                     occList.add(passageLength);
                     ivtMapItem.put(token, occList);
+                    termList.add(token);
                     passageLength++;
                 }
 
@@ -156,6 +162,8 @@ public class IndexerInvertedOccurrence extends Indexer {
                     }
                 }
 
+                // aib.buildDocTermPositionMap(docId, termList);
+
                 buildDocumentIndex(di);
             }
         }
@@ -169,11 +177,12 @@ public class IndexerInvertedOccurrence extends Indexer {
         long start_t = System.currentTimeMillis();
 
         cleanUpDirectory();
+        // AssistantIndexBuilder.cleanFiles(_options);
 
         // Get all corpus files.
         List<File> files = getAllFiles(new File(corpusFolder));
 
-        int filesPerBatch = 1750;
+        int filesPerBatch = 1300;
 
         // initialStore(false, files.size() / filesPerBatch);
 
@@ -191,6 +200,7 @@ public class IndexerInvertedOccurrence extends Indexer {
 
         InvertedIndexBuilder builder = InvertedIndexBuilder.getBuilder(new File(
                 _options._indexPrefix));
+        AssistantIndexBuilder aib = AssistantIndexBuilder.getInstance(_options);
 
         tfm = new TermFrequencyManager(_options._indexPrefix);
 
@@ -223,7 +233,7 @@ public class IndexerInvertedOccurrence extends Indexer {
                     endFileIdx = fileIdEnd;
                 }
                 InvertIndexBuildingTask iibt = new InvertIndexBuildingTask(
-                        files, startFileIdx, endFileIdx, ivtMap);
+                        files, startFileIdx, endFileIdx, ivtMap, aib);
                 threadPool.submit(iibt);
                 taskList.add(iibt);
             }
@@ -266,6 +276,8 @@ public class IndexerInvertedOccurrence extends Indexer {
             di.setPageRank((float) (double) pageRankMap.get(basename));
             di.setNumViews((int) (double) numViewsMap.get(basename));
         }
+
+        // aib.close();
 
         storeVariables();
 
@@ -319,6 +331,22 @@ public class IndexerInvertedOccurrence extends Indexer {
 
         IvtMapInteger ivtMapBatch = builder.getUnifiedDistributedIvtiIntegerMap();
         ivtIndexMapList.add(ivtMapBatch);
+
+//        AssistantIndexBuilder aib = AssistantIndexBuilder.getInstance(_options);
+//        aib.buildTwoLetterMap(ivtMapBatch.keySet());
+//        aib.buildTermLenMap(ivtMapBatch.keySet());
+//
+//        String a = aib.getTermPositionManager().getTermAtPosition(1, 1);
+//        System.out.println("a: " + a);
+//        List<String> b = aib.getTwoLetterTermListManager().getLetterTermList("or");
+//        for (String s : b) {
+//            System.out.println(s);
+//        }
+//        List<String> c = aib.getTermLenListManager().getTermLenList(2);
+//        for (String s : c) {
+//            System.out.println(s);
+//        }
+        
         readVariables();
     }
 
