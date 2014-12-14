@@ -213,8 +213,8 @@ public class SearchEngine {
                     startIndexing();
                     break;
                 case SERVE:
-                    //startServing();
-                	startTesting();
+                    startServing();
+                	//startTesting();
                     break;
                 case MINING:
                     startMining();

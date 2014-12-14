@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="libs/objenesis-1.2.jar"/>
 	<classpathentry kind="lib" path="libs/reflectasm-1.09-shaded.jar"/>
 	<classpathentry kind="lib" path="libs/mapdb-1.0.6.jar"/>
+	<classpathentry kind="lib" path="libs/gson-2.3.1.jar"/>
 	<classpathentry kind="output" path="src"/>
 </classpath>
