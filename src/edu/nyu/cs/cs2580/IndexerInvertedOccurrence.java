@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +43,7 @@ public class IndexerInvertedOccurrence extends Indexer {
     private Map<String, Integer> docUrlMap = null;
     private Map<String, Object> infoMap = null;
     private String CorpusLocation="data/wiki";
-    
+    private AssistantIndexBuilder aib =null;
     
     private String previousQuery = new String();
     private int previousDocid = -1;
@@ -339,6 +341,7 @@ public class IndexerInvertedOccurrence extends Indexer {
 
         IvtMapInteger ivtMapBatch = builder.getUnifiedDistributedIvtiIntegerMap();
         ivtIndexMapList.add(ivtMapBatch);
+        aib = AssistantIndexBuilder.getInstance(_options);
 
 //        AssistantIndexBuilder aib = AssistantIndexBuilder.getInstance(_options);
 //        aib.buildTwoLetterMap(ivtMapBatch.keySet());
@@ -667,10 +670,13 @@ public class IndexerInvertedOccurrence extends Indexer {
     private void storeCandidate(Query query, Vector<Vector<Word>> temp,int windowSize){
         
     	for (int i=0;i<query._tokens.size();i++){
+    		 //long currentTime = System.currentTimeMillis();
     		 String target=query._tokens.get(i);
     	     PriorityQueue<Word> pq=new PriorityQueue<Word> ();
-    	     for (Map<String, List<Integer>> m : ivtIndexMapList) {
-    	           for (String k:m.keySet()){
+    	     Set<String> candidates = getPossible(target);
+    	     Iterator<String> it = candidates.iterator();
+    	     while (it.hasNext()){
+    	    	       String k = it.next();
     	        	   if (Math.abs(target.length()-k.length())>=2)
     	        		   continue;
     	        	   if (k.equals(target)==true){
@@ -686,12 +692,12 @@ public class IndexerInvertedOccurrence extends Indexer {
     	        		   addPQ(pq,word,windowSize);
     	        		   
     	        	   }
-    	           }
     	     }
     	     while (pq.isEmpty()==false){
     	    	 temp.get(i).add(pq.poll()) ;
-    	     }         			
-    		
+    	     }         		
+    	  // long timeElapsed = System.currentTimeMillis()-currentTime;
+    	  // System.out.println("time elapsed: "+timeElapsed);	
     	}
     	    	
     }
@@ -722,23 +728,23 @@ public class IndexerInvertedOccurrence extends Indexer {
     }
     
     private void experiment(List<Query> lists, List<Query> result){
-    	int kk=0;
-    	System.out.println(lists.size());
+    	
+    	
     	for (Query q:lists){
     		int count =0;
     		int docid=-1;
     		DocumentIndexed doc;
     	    while ((doc = (DocumentIndexed) nextDoc(q, docid)) != null) {
-    	    	if (count>=6){
+    	    	if (count>=1){
     	    		result.add(q);
     	    		break;
     	    	}
     	    	count++;
     	    	docid=doc._docid;
-    	    	
+    	    	System.out.println("current docid: "+docid);
     	    }
-    		System.out.println(kk);
-    		kk++;
+    		
+    	
     		
     	}
     }
@@ -758,7 +764,43 @@ public class IndexerInvertedOccurrence extends Indexer {
     		}
     	}
     }
-    public void querySearch(Query query){
+    
+    public Set<String> getPossible(String str){
+    	Set<String> result = new HashSet<String> ();
+    	int len=str.length();
+    	if (len==1){
+    		result.add(str);
+    		return result;
+    	}
+    	Map<String,Integer> tempMap = new HashMap<String,Integer> ();
+    	for (int i=0;i+2<=len;i++){
+    		String biGram = str.substring(i,i+2);
+    		List<String> biGramList = aib.getTwoLetterTermListManager().getLetterTermList(biGram);
+    		for (String element:biGramList){
+    			if (tempMap.containsKey(element)==false)
+    				tempMap.put(element, 1);
+    			else
+    				tempMap.put(element,tempMap.get(element)+1);
+    		}
+    	}
+    	double boundary=0.0;
+    	if (len==2)
+    		boundary=1.0;
+    	else
+    	  boundary = (double)len*0.5;
+    	//int boundaryAsInt = (int)boundary;
+        for  (String element:tempMap.keySet()){
+        	int tmp = tempMap.get(element);
+        	double tmpDou = (double)tmp;
+        	if (tmpDou>=boundary){
+        		result.add(element);
+        	}
+        }    	    	    
+    	return result;
+    }
+    
+    public List<Query> querySearch(Query query){   
+    	long currentTime = System.currentTimeMillis();
     	int windowSize=2;
     	Vector<Vector<Word>> temp=new Vector<Vector<Word>>();
     	for (int i=0;i<query._tokens.size();i++)
@@ -768,13 +810,17 @@ public class IndexerInvertedOccurrence extends Indexer {
     	List<Query> candidates=new ArrayList<Query> ();
     	String[] tempQuery=new String[temp.size()];
     	makeQueryList(temp,candidates,tempQuery,0);
-    	for (int i=0;i<candidates.size();i++)
-    		System.out.println(candidates.get(i));
-    	
+    	//for (int i=0;i<candidates.size();i++)
+    	//	System.out.println(candidates.get(i));
+    	long elapse = System.currentTimeMillis()-currentTime;
+    	//System.out.println("elapsed: "+elapse);
     	List<Query> result = new ArrayList<Query>();
-    	/*experiment(candidates,result);
+    	experiment(candidates,result);
+    	elapse = System.currentTimeMillis() - currentTime;
+    	//System.out.println("elapsed: "+elapse);
     	for (int i=0;i<result.size();i++)
-    		System.out.println(result.get(i));*/
+    		System.out.println(result.get(i));
+    	return result;
     	
     }
 
