@@ -31,4 +31,13 @@ public class Query {
     }
     s.close();
   }
+  @Override public String toString(){
+	  String val="[";
+	  for (int i=0;i<_tokens.size();i++){
+		  val+=_tokens.get(i);
+		  val+=" ";
+	  }
+	  val+="]";
+	  return val;
+  }
 }

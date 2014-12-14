@@ -179,6 +179,20 @@ public class SearchEngine {
                 "Listening on port: " + Integer.toString(SearchEngine.PORT));
         ServerRunner.executeInstance(new FileServer("", SearchEngine.PORT, rootDirs, handler));
     }
+    
+    
+    private static void startTesting() throws Exception {
+        // Create the handler and its associated indexer.
+        Indexer indexer = Indexer.Factory.getIndexerByOption(SearchEngine.OPTIONS);
+        Check(indexer != null,
+                "Indexer " + SearchEngine.OPTIONS._indexerType + " not found!");
+        indexer.loadIndex();
+        IndexerInvertedOccurrence temp=(IndexerInvertedOccurrence)indexer;
+        Query query = new Query("new york universiy");
+        query.processQuery();
+        temp.querySearch(query);
+        
+    }
 
     private static void startMining() throws IOException {
 
@@ -199,7 +213,8 @@ public class SearchEngine {
                     startIndexing();
                     break;
                 case SERVE:
-                    startServing();
+                    //startServing();
+                	startTesting();
                     break;
                 case MINING:
                     startMining();
