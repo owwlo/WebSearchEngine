@@ -35,7 +35,7 @@
                     if (arr.length > 0) {
                         var templateHtml = _.template($("#prediction-item-template").html());
                         _.each(arr, function(item) {
-                            var url = '/search?query=' + encodeURIComponent(item) + '&ranker=favorite&format=html';
+                            var url = '/search?query=' + encodeURIComponent(item) + '&ranker=favorite&format=html&redirect=true';
                             var i = {
                                 url: url,
                                 query: item
