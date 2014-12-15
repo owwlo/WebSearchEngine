@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 import edu.nyu.cs.cs2580.Bhattacharyya.Pair;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -346,7 +347,7 @@ public class QueryHandler implements HttpHandler {
                         ScoredDocument sd = scoredDocs.get(i);
                         sb.append(sd.asHtmlResult());
                     }
-                    htmlStr = htmlStr.replace("{{result}}", sb.toString());
+                    htmlStr = htmlStr.replace("{{result}}", new String(Base64.encode(sb.toString().getBytes())).replaceAll("\n", ""));
 
                     Headers responseHeaders = exchange.getResponseHeaders();
                     // Make browser this it is a HTML
