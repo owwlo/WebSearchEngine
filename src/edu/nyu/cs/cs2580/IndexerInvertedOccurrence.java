@@ -883,8 +883,18 @@ public class IndexerInvertedOccurrence extends Indexer {
         for (int i = 0; i < tmp.size(); i++) {
             result.set(i, tmp.get(i).term);
         }
-        for (int i = 0; i < result.size(); i++)
-            System.out.println("result: " + result.get(i));
+        int index=-1;
+        for (int i = 0; i < result.size(); i++){
+            //System.out.println("result: " + result.get(i));
+        	if (historySub.size()>0&&historySub.get(0)._query.equals(result.get(i)._query)==true){
+        		index = i;
+        		break;
+        	}
+        	
+        }
+        if (index>0&&index<result.size())
+        	result.remove(index);
+        
         finalResult.put("correction", result);
         
         
