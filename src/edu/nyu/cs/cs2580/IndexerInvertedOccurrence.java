@@ -889,14 +889,11 @@ public class IndexerInvertedOccurrence extends Indexer {
         
         
         List<Query> suggestions = new ArrayList<Query> ();
-        for (int i=0;i<result.size();i++){
-        	List<String> possibles = new ArrayList<String> ();
-        	possibles = sh.querySearch(result.get(i));
-        	for (String str: possibles){
-        		Query strQ = new Query(str);
-        		strQ.processQuery();
-        		suggestions.add(strQ);
-        	}
+        List<String> l = sh.queryExplore();
+        for (String str:l){
+        	Query qqq = new Query(str);
+        	qqq.processQuery();
+        	suggestions.add(qqq);
         }
         finalResult.put("suggestions", suggestions);
         return finalResult;
