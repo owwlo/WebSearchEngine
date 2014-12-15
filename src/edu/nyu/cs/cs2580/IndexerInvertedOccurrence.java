@@ -826,7 +826,11 @@ public class IndexerInvertedOccurrence extends Indexer {
          * Map<String,Integer> result= supplementWord(query); for (String e:
          * result.keySet()){ System.out.println(e); } return null;
          */
-
+        SessionHandler sh = SessionHandler.getInstance();
+        List<String> history =sh.queryHistory();
+        for (String str:history){
+        	System.out.println(str);
+        }
         long currentTime = System.currentTimeMillis();
         int windowSize = 2;
         Vector<Vector<Word>> temp = new Vector<Vector<Word>>();
