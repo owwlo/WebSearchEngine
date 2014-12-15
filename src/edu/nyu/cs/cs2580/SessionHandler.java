@@ -52,12 +52,15 @@ public class SessionHandler {
 		if (cur_sess == null) { // load history
 			cur_sess = sess;
 			LoadFromDB(); // get querycount and paircount
+			System.out.println("querycount & paircount " + querycount.size()
+					+ " " + paircount.size());
 			queryInSession.clear();
 		} else if (cur_sess != sess) { // write the recent session to db
 			/*
 			 * if (queryInSession.size() > 0) { Write2DB(); // write querycount
 			 * paircount }
 			 */
+			System.out.println("current session is " + cur_sess);
 			cur_sess = sess;
 			queryInSession.clear();
 		}
@@ -80,25 +83,99 @@ public class SessionHandler {
 		dbm.getAllPairCount(paircount);
 	}
 
-	public List<String> queryHistory(){
+	public List<String> queryHistory() {
 		List<String> l = new ArrayList<String>();
-		
-		for (Pair<String, Long> e : queryInSession){
+
+		for (Pair<String, Long> e : queryInSession) {
 			l.add(e.first);
 		}
 		return l;
 	}
-	
+
 	public List<String> queryAllHistory() {
 		List<String> l = new ArrayList<String>();
-		
+
 		l.addAll(querycount.keySet());
 		return l;
 	}
+
+	// only add query to db
+	public List<String> queryExplore() {
+		List<String> l = new ArrayList<String>();
+		Set<String> candidates = new HashSet<String>();
+
+		Date date = new Date();
+		long ts = date.getTime();
+
+		// generate the first query in a session
+		if (queryInSession.size() == 0) {
+			return l;
+		}
+
+		// 1. get the queries relevant to current query
+		ArrayList<String> rel = new ArrayList<String>();
+		for (int i = queryInSession.size() - 1; i >= 0; i--) {
+			Pair<String, Long> last = queryInSession.get(i);
+			System.out.println(last.second + "-" + ts + " " + last.first);
+			if (ts - last.second < INTEVAL) {
+				System.out.println("correlated");
+				rel.add(last.first);
+			} else {
+				System.out.println("irrelevant");
+				break;
+			}
+		}
+
+		// 2. calc the co-occurrence of the rel queries with all the other
+		// queries in the session
+		PriorityQueue<Pair<Pair<String, String>, Double>> pmi_queue = new PriorityQueue<Pair<Pair<String, String>, Double>>(
+				10, new CompareByValue());
+		for (String item : rel) {
+			for (String other : querycount.keySet()) {
+				if (item.equalsIgnoreCase(other)) {
+					continue;
+				}
+				System.out.println("\tLooking at " + other + " "
+						+ paircount.size());
+				Pair<String, String> pair = new Pair<String, String>(item,
+						other);
+				double pmi = 0.0;
+				if (paircount.containsKey(pair)) {
+					double fpair = (double) paircount.get(pair);
+					double fitem = (double) querycount.get(item);
+					double fother = (double) querycount.get(other);
+					pmi = Math.log(fpair / (fitem * fother) + 1);
+					pmi_queue.add(new Pair<Pair<String, String>, Double>(pair,
+							pmi));
+					System.out.println("\t\t" + pmi);
+				}
+			}
+		}
+
+		// 3. get the history queries with the co-occurrence (above threshold?)
+		// of the highest top 5
+		int count = 0;
+		while (pmi_queue.size() > 0) {
+			Pair<Pair<String, String>, Double> p = pmi_queue.poll();
+			if (p.second > THRESHOLD) {
+				candidates.add(p.first.second);
+				count++;
+			} else {
+				break;
+			}
+			if (count > 2) {
+				break;
+			}
+		}
+
+		l.addAll(candidates);
+		return l;
+	}
+
 	// go over all the queries, and get pmi(LLR) value for each pair,
-	// in every session
-	public List<String> querySearch(String query){
-	//	System.out.println("===search for "+query);
+	// in every session, add query to db
+	public List<String> querySearch(String query) {
+		// System.out.println("===search for "+query);
 		List<String> l = new ArrayList<String>();
 		Set<String> candidates = new HashSet<String>();
 
@@ -120,13 +197,13 @@ public class SessionHandler {
 				long newcount = querycount.get(query) + 1;
 				querycount.put(query, newcount);
 				dbm.updateQueryCount(query, newcount);
-			//	System.out.println("update to db "+query + ":"+newcount);
+				// System.out.println("update to db "+query + ":"+newcount);
 			} else {
 				querycount.put(query, (long) 1);
 				dbm.addQueryCount(query, 1);
-			//	System.out.println("add to db "+ query + ":1");
+				// System.out.println("add to db "+ query + ":1");
 			}
-			
+
 			return l;
 		}
 
@@ -134,12 +211,12 @@ public class SessionHandler {
 		ArrayList<String> rel = new ArrayList<String>();
 		for (int i = queryInSession.size() - 1; i >= 0; i--) {
 			Pair<String, Long> last = queryInSession.get(i);
-		//	System.out.println(last.second+"-"+ ts + " " + last.first);
+			// System.out.println(last.second+"-"+ ts + " " + last.first);
 			if (ts - last.second < INTEVAL) {
-			//	System.out.println("correlated");
+				// System.out.println("correlated");
 				rel.add(last.first);
 			} else {
-			//	System.out.println("irrelevant");
+				// System.out.println("irrelevant");
 				break;
 			}
 		}
@@ -151,48 +228,49 @@ public class SessionHandler {
 			long newcount = querycount.get(query) + 1;
 			querycount.put(query, newcount);
 			dbm.updateQueryCount(query, newcount);
-		//	System.out.println("update to db "+query + ":"+newcount);
+			// System.out.println("update to db "+query + ":"+newcount);
 		} else {
 			querycount.put(query, (long) 1);
 			dbm.addQueryCount(query, 1);
-		//	System.out.println("add to db "+ query + ":1");
+			// System.out.println("add to db "+ query + ":1");
 		}
 		for (String item : rel) {
-		//	System.out.println("Working towards relevant query: "+ item);
-			Pair<String, String> p1 = new Pair<String, String>(query,
-					item);
-			Pair<String, String> p2 = new Pair<String, String>(item,
-					query);
+			// System.out.println("Working towards relevant query: "+ item);
+			Pair<String, String> p1 = new Pair<String, String>(query, item);
+			Pair<String, String> p2 = new Pair<String, String>(item, query);
 			if (paircount.containsKey(p1)) {
 				long newcount = paircount.get(p1) + 1;
 				paircount.put(p1, newcount);
 				paircount.put(p2, newcount);
 				dbm.updatePairCount(item, query, newcount);
-			//	System.out.println("update to db "+ p1+":"+p2+":"+newcount);
+				// System.out.println("update to db "+ p1+":"+p2+":"+newcount);
 			} else {
 				paircount.put(p1, (long) 1);
 				paircount.put(p2, (long) 1);
 				dbm.addPairCount(item, query, 1);
-			//	System.out.println("update to db "+ item+":"+query+":1");
+				// System.out.println("update to db "+ item+":"+query+":1");
 			}
 		}
 
 		// 2. calc the co-occurrence of the rel queries with all the other
 		// queries in the session
-		PriorityQueue<Pair<Pair<String, String>, Double>> pmi_queue = new PriorityQueue<Pair<Pair<String, String>, Double>>(paircount.size(),new CompareByValue());
-		for (String item : rel){
-			for (String other : querycount.keySet()){
-				if (item.equalsIgnoreCase(other)){
+		PriorityQueue<Pair<Pair<String, String>, Double>> pmi_queue = new PriorityQueue<Pair<Pair<String, String>, Double>>(
+				paircount.size(), new CompareByValue());
+		for (String item : rel) {
+			for (String other : querycount.keySet()) {
+				if (item.equalsIgnoreCase(other)) {
 					continue;
 				}
-				Pair<String, String> pair = new Pair<String, String>(item, other);
+				Pair<String, String> pair = new Pair<String, String>(item,
+						other);
 				double pmi = 0.0;
-				if (paircount.containsKey(pair)){
-					double fpair = (double)paircount.get(pair);
-					double fitem = (double)querycount.get(item);
+				if (paircount.containsKey(pair)) {
+					double fpair = (double) paircount.get(pair);
+					double fitem = (double) querycount.get(item);
 					double fother = (double) querycount.get(other);
-					pmi = Math.log(fpair/(fitem * fother)+1);
-					pmi_queue.add(new Pair<Pair<String, String>, Double>(pair, pmi));
+					pmi = Math.log(fpair / (fitem * fother) + 1);
+					pmi_queue.add(new Pair<Pair<String, String>, Double>(pair,
+							pmi));
 				}
 			}
 		}
@@ -200,134 +278,105 @@ public class SessionHandler {
 		// 3. get the history queries with the co-occurrence (above threshold?)
 		// of the highest top 5
 		int count = 0;
-		while (pmi_queue.size()>0 ){
-			Pair<Pair<String,String>, Double> p = pmi_queue.poll();
-			if (p.second > THRESHOLD){
+		while (pmi_queue.size() > 0) {
+			Pair<Pair<String, String>, Double> p = pmi_queue.poll();
+			if (p.second > THRESHOLD) {
 				candidates.add(p.first.second);
 				count++;
 			} else {
 				break;
 			}
-			if (count > 2){
+			if (count > 2) {
 				break;
 			}
 		}
 
 		l.addAll(candidates);
 		return l;
-		
+
 	}
+
 	public List<String> querySearch(Query query) {
 		return querySearch(query._query);
 	}
-	
-    // for priority queue of pmi_queue<<q1, q2>, pmi>
-    private class CompareByValue implements
-            Comparator<Pair<Pair<String, String>, Double>> {
-        @Override
-        public int compare(Pair<Pair<String, String>, Double> lhs,
-                Pair<Pair<String, String>, Double> rhs) {
-            return rhs.second.compareTo(lhs.second);
-        }
-    }
-    
-    public static void main(String[] args){
-    	SessionHandler handler = SessionHandler.getInstance();
-    	
-    	/*
-    	try {
-    		List<String> l;
-        	// first session sim
-    		handler.setSession("0001");
-			Thread.sleep(1000);
-    		l = handler.querySearch("nike");
-			System.out.println("The rel list of nike");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(1000);
-			l = handler.querySearch("adidas");
-			System.out.println("The rel list of adidas");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(1000);
-			l = handler.querySearch("air jordan");
-			System.out.println("The rel list of air jordan");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(70000);
-			l = handler.querySearch("inducing dog defication");
-			System.out.println("The rel list of i..d..d..");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(1000);
-			l = handler.querySearch("dog eat uncooked pasta");
-			System.out.println("The rel list of d..e..u..p..");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(1000);
-			l = handler.querySearch("inducing dog vomiting");
-			System.out.println("The rel list of i..d..v..");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(70000);
-			l = handler.querySearch("counterstrike");
-			System.out.println("The rel list of counterstrike");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(1000);
-			l = handler.querySearch("counter strike");
-			System.out.println("The rel list of counter strike");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(1000);
-	    	
-	    	// second session sim
-			handler.setSession("0002");
-			Thread.sleep(1000);
-			l = handler.querySearch("nike");
-			System.out.println("The rel list of nike");
-			for (int i = 0 ; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			Thread.sleep(1000);
-			l = handler.querySearch("adidas");
-			System.out.println("The rel list of adidas");
-			for (int i = 0; i < l.size(); i++){
-				System.out.println(l.get(i));
-			}
-			System.out.println();
-			
-			
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
-    }
+
+	// for priority queue of pmi_queue<<q1, q2>, pmi>
+	private class CompareByValue implements
+			Comparator<Pair<Pair<String, String>, Double>> {
+		@Override
+		public int compare(Pair<Pair<String, String>, Double> lhs,
+				Pair<Pair<String, String>, Double> rhs) {
+			return rhs.second.compareTo(lhs.second);
+		}
+	}
+
+	public static void main(String[] args) {
+		SessionHandler handler = SessionHandler.getInstance();
+		/*
+		 * try out queryExpolore
+		 */
+		/*
+		 * handler.setSession("0003");
+		 * handler.querySearch("inducing dog vomiting"); Thread.sleep(1000);
+		 * List<String> l = handler.queryExplore(); for (int i = 0; i <
+		 * l.size(); i++){ System.out.println(l.get(i)); }
+		 */
+		/*
+		 * try { List<String> l; // first session sim
+		 * handler.setSession("0001"); Thread.sleep(1000); l =
+		 * handler.querySearch("nike");
+		 * System.out.println("The rel list of nike"); for (int i = 0 ; i <
+		 * l.size(); i++){ System.out.println(l.get(i)); } System.out.println();
+		 * 
+		 * Thread.sleep(1000); l = handler.querySearch("adidas");
+		 * System.out.println("The rel list of adidas"); for (int i = 0 ; i <
+		 * l.size(); i++){ System.out.println(l.get(i)); } System.out.println();
+		 * 
+		 * Thread.sleep(1000); l = handler.querySearch("air jordan");
+		 * System.out.println("The rel list of air jordan"); for (int i = 0 ; i
+		 * < l.size(); i++){ System.out.println(l.get(i)); }
+		 * System.out.println();
+		 * 
+		 * Thread.sleep(70000); l =
+		 * handler.querySearch("inducing dog defication");
+		 * System.out.println("The rel list of i..d..d.."); for (int i = 0 ; i <
+		 * l.size(); i++){ System.out.println(l.get(i)); } System.out.println();
+		 * 
+		 * Thread.sleep(1000); l =
+		 * handler.querySearch("dog eat uncooked pasta");
+		 * System.out.println("The rel list of d..e..u..p.."); for (int i = 0 ;
+		 * i < l.size(); i++){ System.out.println(l.get(i)); }
+		 * System.out.println();
+		 * 
+		 * Thread.sleep(1000); l = handler.querySearch("inducing dog vomiting");
+		 * System.out.println("The rel list of i..d..v.."); for (int i = 0 ; i <
+		 * l.size(); i++){ System.out.println(l.get(i)); } System.out.println();
+		 * 
+		 * Thread.sleep(70000); l = handler.querySearch("counterstrike");
+		 * System.out.println("The rel list of counterstrike"); for (int i = 0 ;
+		 * i < l.size(); i++){ System.out.println(l.get(i)); }
+		 * System.out.println();
+		 * 
+		 * Thread.sleep(1000); l = handler.querySearch("counter strike");
+		 * System.out.println("The rel list of counter strike"); for (int i = 0
+		 * ; i < l.size(); i++){ System.out.println(l.get(i)); }
+		 * System.out.println();
+		 * 
+		 * Thread.sleep(1000);
+		 * 
+		 * // second session sim handler.setSession("0002"); Thread.sleep(1000);
+		 * l = handler.querySearch("nike");
+		 * System.out.println("The rel list of nike"); for (int i = 0 ; i <
+		 * l.size(); i++){ System.out.println(l.get(i)); } System.out.println();
+		 * 
+		 * Thread.sleep(1000); l = handler.querySearch("adidas");
+		 * System.out.println("The rel list of adidas"); for (int i = 0; i <
+		 * l.size(); i++){ System.out.println(l.get(i)); } System.out.println();
+		 * 
+		 * 
+		 * } catch (InterruptedException e) { // TODO Auto-generated catch block
+		 * e.printStackTrace(); }
+		 */
+	}
 
 }
