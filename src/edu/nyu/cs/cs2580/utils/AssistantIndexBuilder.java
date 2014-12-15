@@ -69,7 +69,7 @@ public class AssistantIndexBuilder {
                 if (lst != null && position < lst.size()) {
                     return lst.get(position);
                 }
-                return "";
+                return null;
             }
         };
     }
