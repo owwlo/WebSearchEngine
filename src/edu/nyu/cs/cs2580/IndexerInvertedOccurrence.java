@@ -500,6 +500,9 @@ public class IndexerInvertedOccurrence extends Indexer {
     }
 
     private boolean canUseCache(Query query, int docid) {
+        if (docid == -1) {
+            return false;
+        }
         if (query._query.equals(previousQuery) == false) {
             return false;
         }

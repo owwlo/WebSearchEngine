@@ -3,8 +3,7 @@ var log = function(log) {
 }
 
 var clickHandler = function(did) {
-	$.get("click_loging", 
-		{
+	$.get("click_loging", {
 			"did": did,
 			"query": query,
 			"ranker": ranker,
@@ -47,4 +46,17 @@ $(function() {
 		});
 		resultAreaDom.append(templateHtml(item));
 	});
+	resultAreaDom.children("div").hide();
+	var domList = resultAreaDom.children("div");
+	var showDiv = function(domList, idx) {
+		if(idx >= domList.length) {
+			return;
+		}
+		var item = $(domList[idx]);
+		item.fadeTo(300 , 1);
+		item.slideDown(300, function() {
+			showDiv(domList, idx + 1);
+		});
+	};
+	showDiv(domList, 0);
 });

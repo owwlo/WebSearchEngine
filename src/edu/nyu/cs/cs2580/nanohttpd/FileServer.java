@@ -35,6 +35,10 @@ public class FileServer extends NanoHTTPD {
             put("jpeg", "image/jpeg");
             put("png", "image/png");
             put("js", "application/javascript");
+            put("woff", "application/x-font-woff");
+            put("ttf", "application/x-font-ttf");
+            put("svg", "image/svg+xml");
+            put("eot", "application/vnd.ms-fontobject");
         }
     };
 

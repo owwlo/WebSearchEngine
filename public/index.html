@@ -1,53 +1,102 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <meta charset="utf-8">
+      <script src="js/jquery-2.1.1.min.js"></script>
+      <script src="js/bootstrap.min.js"></script>
+      <script src="js/underscore.js"></script>
+      <script src="js/bootbox.min.js"></script>
+      <script type="text/javascript">
+         var query = "{{query}}";
+         var ranker = "{{ranker}}";
+         var result = "{{result}}";
+         var count = {{count}};
 
-    <script src="js/jquery-2.1.1.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/underscore.js"></script>
-    <script src="js/bootbox.min.js"></script>
-    <script type="text/javascript">
-    	var query = "{{query}}";
-    	var ranker = "{{ranker}}";
-    	var result = "{{result}}";
-    	var count = {{count}};
-    </script>
-    <script src="js/wse.js"></script>
-    
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
-    <link href="css/wse.css" rel="stylesheet">
-
-    <script type="text/template" id="result-template">
-    	<div class="list-group">
-          <a href="#" onclick="clickHandler(<%= did %>)" class="list-group-item">
-            <h4 class="list-group-item-heading"><%= title %></h4>
-            <p class="list-group-item-text">did: <i><%= did %></i></p>
-            <p class="list-group-item-text">score: <i><%= score %></i></p>
-          </a>
+        $(document).ready(function() {
+            $("#search-button").click(function(){
+                var search_text = $("#search-box").val();
+                window.location.href='/search?query=' + encodeURIComponent(search_text) + '&ranker=favorite&format=html';
+            });
+            var possible_area = $("#possible-div");
+            possible_area.hide();
+            $.ajax({
+                type: 'GET',
+                url: 'prediction?query=' + encodeURIComponent(query),
+                dataType: 'json',
+                success: function(data) {
+                    var arr = [];
+                    _.each(data, function(item) {
+                        if(item != query) {
+                            arr.push(item);
+                        }
+                    });
+                    var dom_append = $("#possible-queries");
+                    if (arr.length > 0) {
+                        var templateHtml = _.template($("#prediction-item-template").html());
+                        _.each(arr, function(item) {
+                            var url = '/search?query=' + encodeURIComponent(item) + '&ranker=favorite&format=html';
+                            var i = {
+                                url: url,
+                                query: item
+                            };
+                            dom_append.append(templateHtml(i));
+                        });
+                        possible_area.slideDown(500);
+                    }
+                }
+            });
+        });
+      </script>
+      <script src="js/wse.js"></script>
+      <link href="css/bootstrap.min.css" rel="stylesheet">
+      <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+      <link href="css/wse.css" rel="stylesheet">
+      <script type="text/template" id="result-template">
+         <div class="list-group">
+              <a href="#" onclick="clickHandler(<%= did %>)" class="list-group-item">
+                <h4 class="list-group-item-heading"><%= title %></h4>
+                <p class="list-group-item-text">did: <i><%= did %></i></p>
+                <p class="list-group-item-text">score: <i><%= score %></i></p>
+              </a>
+            </div>
+      </script>
+      <script type="text/template" id="prediction-item-template">
+        <a href='<%= url %>';><strong><%= query %></strong></a> 
+      </script>
+   </head>
+   <body>
+      <div class="container">
+        <div class="header">
+            <h3 class="text-muted">Web Search Engine</h3>
         </div>
-    </script>
-</head>
-<body>
-    <div class="container">
-      <div class="header">
-        <ul class="nav nav-pills pull-right">
-          <li class="active"><a href="#">Results</a></li>
-        </ul>
-        <h3 class="text-muted">Web Search Engine - 07</h3>
-      </div>
-      <div class="page-header">
-        <p >Query: <i id="queryLabel"></i></p>
-        <p >Ranker: <i id="rankerLabel"></i></p>
-        <p >Resuts Count: <i id="countLabel"></i></p>
-      </div>
+        <div class="row">
+            <div class="col-sm-10 col-sm-offset-1">
+                <div class="input-group stylish-input-group">
+                    <input type="text" class="form-control"  placeholder="Search" id="search-box">
+                    <span class="input-group-addon">
+                        <button type="submit" id="search-button">
+                            <span class="glyphicon glyphicon-search"></span>
+                        </button>  
+                    </span>
+                </div>
+            </div>
+        </div>
 
-      <div class="row" id="resultArea">
-        
+        <div class="page-header">
+        <div class="alert alert-warning" role="alert" id="possible-div">
+            <p>Are you looking for these:</p>
+            <p id="possible-queries"></p>
+        </div>
+            <div class="alert alert-info alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <p >Query: <i id="queryLabel"></i></p>
+                <p >Ranker: <i id="rankerLabel"></i></p>
+                <p >Results Count: <i id="countLabel"></i></p>
+            </div>
+        </div>
+        <div class="row" id="resultArea">
+        </div>
       </div>
-    </div>
-
-</body>
+   </body>
 </html>
