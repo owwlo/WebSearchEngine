@@ -13,6 +13,8 @@
          var result = "{{result}}";
          var count = {{count}};
 
+         result = atob(result);
+
         $(document).ready(function() {
             $("#search-button").click(function(){
                 var search_text = $("#search-box").val();
