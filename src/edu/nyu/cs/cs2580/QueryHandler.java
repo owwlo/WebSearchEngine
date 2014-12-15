@@ -195,13 +195,18 @@ public class QueryHandler implements HttpHandler {
         response.append(response.length() > 0 ? "\n" : "");
     }
 
-    private void constructTextOutput(final List<Query> queries,
+    private void constructTextOutput(final Map<String, List<Query>> queries,
             StringBuffer response) {
-        List<String> sl = new ArrayList<String>();
-        for (Query q : queries) {
-            sl.add(q.toString());
+        Map<String, List<String>> mp = new HashMap<String, List<String>>();
+        for (String name : queries.keySet()) {
+            List<Query> qs = queries.get(name);
+            List<String> sl = new ArrayList<String>();
+            for (Query q : qs) {
+                sl.add(q.toString());
+            }
+            mp.put(name, sl);
         }
-        String json = new Gson().toJson(sl);
+        String json = new Gson().toJson(mp);
         response.append(json);
     }
 
@@ -301,7 +306,7 @@ public class QueryHandler implements HttpHandler {
             processedQuery.processQuery();
 
             if (cgiArgs._isRedirect) {
-
+                handler.querySearch(cgiArgs._query);
             }
 
             // Ranking.
@@ -384,7 +389,7 @@ public class QueryHandler implements HttpHandler {
             processedQuery.processQuery();
 
             IndexerInvertedOccurrence iiq = (IndexerInvertedOccurrence) _indexer;
-            List<Query> qlst = iiq.querySearch(processedQuery);
+            Map<String, List<Query>> qlst = iiq.querySearch(processedQuery);
             StringBuffer response = new StringBuffer();
             constructTextOutput(qlst, response);
             respondWithMsg(exchange, response.toString());
