@@ -88,6 +88,13 @@ public class SessionHandler {
 		}
 		return l;
 	}
+	
+	public List<String> queryAllHistory() {
+		List<String> l = new ArrayList<String>();
+		
+		l.addAll(querycount.keySet());
+		return l;
+	}
 	// go over all the queries, and get pmi(LLR) value for each pair,
 	// in every session
 	public List<String> querySearch(String query){

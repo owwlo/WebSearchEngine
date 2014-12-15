@@ -266,6 +266,13 @@ public class QueryHandler implements HttpHandler {
                 respondWithMsg(exchange, "Success!");
             }
         } else if (uriPath.equals("/search")) {
+        	// Add session id for the sessionhandler
+    		SessionHandler handler = SessionHandler.getInstance();
+        	synchronized (handler){
+        		String session = getSession(exchange);
+        		handler.setSession(session);
+        	}
+        	
             // Process the CGI arguments.
             CgiArguments cgiArgs = new CgiArguments(uriQuery);
             if (cgiArgs._query.isEmpty()) {
@@ -338,6 +345,13 @@ public class QueryHandler implements HttpHandler {
             respondWithMsg(exchange, response.toString());
             System.out.println("Finished query: " + cgiArgs._query);
         } else if (uriPath.equals("/prediction")) {
+        	// Add session id for the sessionhandler
+    		SessionHandler handler = SessionHandler.getInstance();
+        	synchronized (handler){
+        		String session = getSession(exchange);
+        		handler.setSession(session);
+        	}
+        	
             CgiArguments cgiArgs = new CgiArguments(uriQuery);
             if (cgiArgs._query.isEmpty()) {
                 respondWithMsg(exchange, "No query is given!");
