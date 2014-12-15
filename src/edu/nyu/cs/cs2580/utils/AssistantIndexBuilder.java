@@ -43,6 +43,10 @@ public class AssistantIndexBuilder {
         public List<String> getTermLenList(int len);
     }
 
+    public static interface ICacheKeeper {
+        public List<String> getCachedPage(int docid);
+    }
+
     private AssistantIndexBuilder(Options opts) {
         options = opts;
         File dbFile = new File(options._indexPrefix + "/../", DB_FILE);
@@ -70,6 +74,18 @@ public class AssistantIndexBuilder {
                     return lst.get(position);
                 }
                 return null;
+            }
+        };
+    }
+
+    public ICacheKeeper getCacheKeeper() {
+        final Map<Integer, List<String>> termPositionMap = db.createHashMap(TERM_POSITION_DB)
+                .makeOrGet();
+        return new ICacheKeeper() {
+
+            @Override
+            public List<String> getCachedPage(int docid) {
+                return termPositionMap.get(docid);
             }
         };
     }

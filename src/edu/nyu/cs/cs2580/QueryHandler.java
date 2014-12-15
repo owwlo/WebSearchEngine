@@ -15,6 +15,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import edu.nyu.cs.cs2580.Bhattacharyya.Pair;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import edu.nyu.cs.cs2580.utils.AssistantIndexBuilder;
 import edu.nyu.cs.cs2580.utils.ClickLoggingManager;
 import edu.nyu.cs.cs2580.utils.ScoredDocumentComparator;
 
@@ -168,8 +169,11 @@ public class QueryHandler implements HttpHandler {
     // care of thread-safety.
     private Indexer _indexer;
 
+    private Options _options;
+
     public QueryHandler(Options options, Indexer indexer) {
         _indexer = indexer;
+        _options = options;
     }
 
     private void respondWithMsg(HttpExchange exchange, final String message)
@@ -270,13 +274,13 @@ public class QueryHandler implements HttpHandler {
                 respondWithMsg(exchange, "Success!");
             }
         } else if (uriPath.equals("/search")) {
-        	// Add session id for the sessionhandler
-    		SessionHandler handler = SessionHandler.getInstance();
-        	synchronized (handler){
-        		String session = getSession(exchange);
-        		handler.setSession(session);
-        	}
-        	
+            // Add session id for the sessionhandler
+            SessionHandler handler = SessionHandler.getInstance();
+            synchronized (handler) {
+                String session = getSession(exchange);
+                handler.setSession(session);
+            }
+
             // Process the CGI arguments.
             CgiArguments cgiArgs = new CgiArguments(uriQuery);
             if (cgiArgs._query.isEmpty()) {
@@ -352,14 +356,25 @@ public class QueryHandler implements HttpHandler {
             }
             respondWithMsg(exchange, response.toString());
             System.out.println("Finished query: " + cgiArgs._query);
+        } else if (uriPath.equals("/page_summary")) {
+            CgiArguments cgiArgs = new CgiArguments(uriQuery);
+            int docid = cgiArgs._numResults;
+            AssistantIndexBuilder aib = AssistantIndexBuilder.getInstance(_options);
+            List<String> cachedTerms = aib.getCacheKeeper().getCachedPage(docid);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < cachedTerms.size() && i < 50; ++i) {
+                sb.append(cachedTerms.get(i));
+                sb.append(" ");
+            }
+            respondWithMsg(exchange, sb.toString());
         } else if (uriPath.equals("/prediction")) {
-        	// Add session id for the sessionhandler
-    		SessionHandler handler = SessionHandler.getInstance();
-        	synchronized (handler){
-        		String session = getSession(exchange);
-        		handler.setSession(session);
-        	}
-        	
+            // Add session id for the sessionhandler
+            SessionHandler handler = SessionHandler.getInstance();
+            synchronized (handler) {
+                String session = getSession(exchange);
+                handler.setSession(session);
+            }
+
             CgiArguments cgiArgs = new CgiArguments(uriQuery);
             if (cgiArgs._query.isEmpty()) {
                 respondWithMsg(exchange, "No query is given!");

@@ -56,8 +56,9 @@
          <div class="list-group">
               <a href="#" onclick="clickHandler(<%= did %>)" class="list-group-item">
                 <h4 class="list-group-item-heading"><%= title %></h4>
-                <p class="list-group-item-text">did: <i><%= did %></i></p>
+                <p class="list-group-item-text">did: <i id="did"><%= did %></i></p>
                 <p class="list-group-item-text">score: <i><%= score %></i></p>
+                <p class="list-group-item-text"><i id="cache-container"></i></p>
               </a>
             </div>
       </script>

@@ -59,4 +59,23 @@ $(function() {
 		});
 	};
 	showDiv(domList, 0);
+
+    var domList2 = resultAreaDom.children("div");
+    var popularCache = function(domList, idx) {
+        if(idx >= domList.length) {
+            return;
+        }
+        var item = $(domList[idx]);
+        $.ajax({
+            type: 'GET',
+            url: 'page_summary?num=' + item.find("#did").text(),
+            success: function(data) {
+            	item.find("#cache-container").text(data);
+				item.slideDown(300, function() {
+					popularCache(domList, idx + 1);
+				});
+            }
+        });
+    };
+    popularCache(domList2, 0);
 });
