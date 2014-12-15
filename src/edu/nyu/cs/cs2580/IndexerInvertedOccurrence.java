@@ -820,17 +820,25 @@ public class IndexerInvertedOccurrence extends Indexer {
         return result;
     }
 
-    public List<Query> querySearch(Query query) {
+    public Map<String,List<Query>> querySearch(Query query) {
 
         /*
          * Map<String,Integer> result= supplementWord(query); for (String e:
          * result.keySet()){ System.out.println(e); } return null;
          */
+    	Map<String,List<Query>> finalResult = new HashMap<String,List<Query>>();
+    	List<Query> historySub = new ArrayList<Query> ();
         SessionHandler sh = SessionHandler.getInstance();
-        List<String> history =sh.queryHistory();
+        List<String> history =sh.queryAllHistory();
         for (String str:history){
-        	System.out.println(str);
+        	if (str.toLowerCase().contains(query._query.toLowerCase())==true){
+        		Query qq = new Query(str);
+        		qq.processQuery();
+        		historySub.add(qq);
+        	}
         }
+        finalResult.put("history", historySub);
+        
         long currentTime = System.currentTimeMillis();
         int windowSize = 2;
         Vector<Vector<Word>> temp = new Vector<Vector<Word>>();
@@ -877,7 +885,18 @@ public class IndexerInvertedOccurrence extends Indexer {
         }
         for (int i = 0; i < result.size(); i++)
             System.out.println("result: " + result.get(i));
-        return result;
+        finalResult.put("correction", result);
+        
+        
+        List<Query> suggestions = new ArrayList<Query> ();
+        List<String> l = sh.queryExplore();
+        for (String str:l){
+        	Query qqq = new Query(str);
+        	qqq.processQuery();
+        	suggestions.add(qqq);
+        }
+        finalResult.put("suggestions", suggestions);
+        return finalResult;
 
     }
 
