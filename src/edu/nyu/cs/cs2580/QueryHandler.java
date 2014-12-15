@@ -325,10 +325,10 @@ public class QueryHandler implements HttpHandler {
                     htmlStr = htmlStr.replace("{{result}}", sb.toString());
 
                     Headers responseHeaders = exchange.getResponseHeaders();
-                    exchange.sendResponseHeaders(200, 0);
-                    OutputStream responseBody = exchange.getResponseBody();
                     // Make browser this it is a HTML
                     responseHeaders.set("Content-Type", "text/html");
+                    exchange.sendResponseHeaders(200, 0);
+                    OutputStream responseBody = exchange.getResponseBody();
                     responseBody.write(htmlStr.getBytes());
                     responseBody.close();
                     return;
