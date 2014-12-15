@@ -258,6 +258,16 @@ public class LogDBManager {
 			db.beginTransaction(SqlJetTransactionMode.READ_ONLY);
 			ISqlJetTable ptable = db.getTable(TABLE_PAIR);
 			
+			ISqlJetCursor cursor = ptable.order(ptable.getPrimaryKeyIndexName());
+			if (!cursor.eof()){
+				do {
+					long count = cursor.getInteger(PAIR_COUNT);
+					String q1 = cursor.getString(QUERY1_FIELD);
+					String q2 = cursor.getString(QUERY2_FIELD);
+					pmap.put(new Pair<String, String>(q1, q2), count);
+				} while (cursor.next());
+			}
+			
 		} catch (SqlJetException e){
 			e.printStackTrace();
 		}
