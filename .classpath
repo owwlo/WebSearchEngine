@@ -10,5 +10,9 @@
 	<classpathentry kind="lib" path="libs/reflectasm-1.09-shaded.jar"/>
 	<classpathentry kind="lib" path="libs/mapdb-1.0.6.jar"/>
 	<classpathentry kind="lib" path="libs/gson-2.3.1.jar"/>
+	<classpathentry kind="lib" path="libs/sqljet-1.1.10.jar"/>
+	<classpathentry kind="lib" path="libs/antlr-runtime-3.4.jar"/>
+	<classpathentry kind="lib" path="libs/org-netbeans-swing-outline-RELEASE68.jar"/>
+	<classpathentry kind="lib" path="libs/sqljet-browser-1.1.10.jar"/>
 	<classpathentry kind="output" path="src"/>
 </classpath>
