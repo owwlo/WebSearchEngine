@@ -95,18 +95,26 @@
         </div>
 
         <div class="page-header">
-            <div class="alert alert-warning" role="alert" id="history-div">
-                <p>Predict from your history:</p>
-                <p id="history-queries"></p>
-            </div>
-            <div class="alert alert-warning" role="alert" id="possible-div">
-                <p>Are you looking for these:</p>
-                <p id="possible-queries"></p>
-            </div>
-            <div class="alert alert-warning" role="alert" id="prediction-div">
-                <p>You may have made a typo:</p>
-                <p id="prediction-queries"></p>
-            </div>
+			<div class="row">
+		        <div class="col-sm-4">
+		            <div class="alert alert-success" role="alert" id="history-div">
+				        <p>Predict from your history:</p>
+				        <p id="history-queries"></p>
+				    </div>
+		        </div>
+		        <div class="col-sm-4">
+		            <div class="alert alert-warning" role="alert" id="possible-div">
+				        <p>Are you looking for these:</p>
+				        <p id="possible-queries"></p>
+				    </div>
+		        </div>
+		        <div class="col-sm-4">
+		            <div class="alert alert-danger" role="alert" id="prediction-div">
+				        <p>You may have made a typo:</p>
+				        <p id="prediction-queries"></p>
+				    </div>
+		        </div>
+		    </div>
             <div class="alert alert-info alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                 <p >Query: <i id="queryLabel"></i></p>
